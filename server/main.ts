@@ -10,6 +10,10 @@ import { ingerir, totalIgnoradas } from '../core/ingest.ts'
 import { pastaDados, pastaLogs } from '../core/paths.ts'
 import { tabelaInfo, tabelaPadrao } from '../core/prices.ts'
 import { historico, resumo, type Agrupar } from '../core/summary.ts'
+import { alertasAtivos, filtrarNovos, gravarJson } from '../core/alerts.ts'
+import { lerPlano } from '../core/plan.ts'
+import { sessaoAtual } from '../core/sessao.ts'
+import { notificarWindows } from './notify-windows.ts'
 
 export const PORTA = Number(process.env.MTM_PORTA ?? 5178)
 const LIMITE_CORPO = 64 * 1024
@@ -25,7 +29,7 @@ const TIPOS: Record<string, string> = {
 }
 
 type Middleware = (req: http.IncomingMessage, res: http.ServerResponse, proximo: () => void) => void
-type Opcoes = { porta?: number; dados?: string; logs?: string; front?: Middleware }
+type Opcoes = { porta?: number; dados?: string; logs?: string; front?: Middleware; avisar?: boolean }
 
 // Front já compilado (npm start): arquivos de dist/, e index.html para qualquer outra rota.
 export function servirDist(pasta = path.join(RAIZ, 'dist')): Middleware {
@@ -51,6 +55,16 @@ export function criarServidor(opcoes: Opcoes = {}) {
   let ultimaLeitura = 0
   let erroLeitura: string | null = null
   let conta: { valor: Conta; em: number } | null = null
+  // a cada vez que o app sobe, pede para entrar de novo; quem entrou fica salvo em data/conta.json
+  let entrou = false
+  const arquivoConta = path.join(dados, 'conta.json')
+  const ultimaConta = () => {
+    try {
+      return JSON.parse(fs.readFileSync(arquivoConta, 'utf8'))
+    } catch {
+      return null
+    }
+  }
   let front = opcoes.front
 
   function ler() {
@@ -61,6 +75,25 @@ export function criarServidor(opcoes: Opcoes = {}) {
       erroLeitura = (e as NodeJS.ErrnoException).code === 'ENOENT' ? 'pasta-nao-encontrada' : String(e)
     }
     ultimaLeitura = Date.now()
+    if (!erroLeitura) publicarStatus()
+  }
+
+  // status.json: o hook e a statusline do Claude Code leem só este arquivo, sem banco nem rede
+  function publicarStatus() {
+    const cfg = lerConfig(dados)
+    const periodos = resumo(db, cfg)
+    const alertas = alertasAtivos(periodos, cfg.limiar)
+    const sessao = sessaoAtual(db, cfg)
+    const plano = cfg.planoAtivo ? lerPlano(dados) : null
+    gravarJson(path.join(dados, 'status.json'), {
+      geradoEm: Date.now(),
+      pct: Object.fromEntries(Object.entries(periodos).map(([p, r]) => [p, r.pct])),
+      alertas,
+      renova5h: plano?.renova5h && plano.renova5h > Date.now() ? plano.renova5h : (sessao?.fim ?? null),
+    })
+    if (opcoes.avisar)
+      for (const a of filtrarNovos(path.join(dados, 'avisados-windows.json'), alertas))
+        notificarWindows(a.nivel === 100 ? 'Limite atingido' : 'Uso do Claude em alerta', a.texto)
   }
 
   const rotas: Record<string, Rota> = {
@@ -80,6 +113,8 @@ export function criarServidor(opcoes: Opcoes = {}) {
           linhasIgnoradas: totalIgnoradas(db),
           ultimaLeitura,
           tabelaPrecos: tabelaInfo,
+          sessao: sessaoAtual(db, cfg),
+          plano: cfg.planoAtivo ? lerPlano(dados) : null,
         },
       ]
     },
@@ -108,7 +143,15 @@ export function criarServidor(opcoes: Opcoes = {}) {
     },
     'GET /api/conta': async () => {
       if (!conta || Date.now() - conta.em > 60_000) conta = { valor: await lerConta(), em: Date.now() }
-      return [200, conta.valor]
+      return [200, { ...conta.valor, entrou, ultima: ultimaConta() }]
+    },
+    'POST /api/entrar': async () => {
+      conta = { valor: await lerConta(), em: Date.now() }
+      if (!conta.valor.conectada) return [409, { erro: 'nenhuma conta conectada no Claude Code' }]
+      const { email, plano, metodo } = conta.valor
+      gravarJson(arquivoConta, { email, plano, metodo, entrouEm: Date.now() })
+      entrou = true
+      return [200, { ...conta.valor, entrou, ultima: ultimaConta() }]
     },
     'GET /api/cambio': async () => [200, await obterCotacao(dados)],
     'GET /api/precos': () => [200, { padrao: tabelaPadrao, ...tabelaInfo }],
@@ -186,7 +229,7 @@ if (import.meta.main) {
     console.error(`MTM_PORTA inválida: "${process.env.MTM_PORTA}". Use um número de 1 a 65535.`)
     process.exit(1)
   }
-  const { servidor, ler, usarFront } = criarServidor()
+  const { servidor, ler, usarFront } = criarServidor({ avisar: true })
   ler()
   setInterval(ler, 30_000).unref()
   if (process.argv.includes('--dev')) {
