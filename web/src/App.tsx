@@ -1,4 +1,4 @@
-import { Gauge, History, Moon, Settings, Sun } from 'lucide-react'
+import { Gauge, History, LogOut, Moon, Settings, Sun } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { api, type Config, type Resumo } from './api.ts'
 import { Configuracoes } from './Configuracoes.tsx'
@@ -110,6 +110,14 @@ export function App() {
               : `Última tentativa ${haQuanto(agora)}`}
           </span>
         </div>
+        <button
+          className="nav"
+          style={{ border: 0, background: 'none', width: '100%' }}
+          onClick={() => api.sair().finally(() => setEntrou(false))}
+        >
+          <LogOut className="icone" aria-hidden />
+          Sair
+        </button>
         <Segmentos
           rotulo="Tema"
           valor={tema}

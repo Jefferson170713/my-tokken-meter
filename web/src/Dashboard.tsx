@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 import { chaveDia } from '../../core/periods.ts'
 import { api, ErroApi, type LinhaHistorico, type Periodo, type Resumo } from './api.ts'
 import { dataLonga, dinheiro, emReais, haQuanto, inteiro, tokens, type Exibicao } from './format.ts'
-import { CardSessao } from './Sessao.tsx'
+import { CardPlano, Renovacao } from './Sessao.tsx'
 import { Banner, Barra, Cabecalho, local, nivel, Segmentos } from './ui.tsx'
 
 type Props = {
@@ -248,15 +248,15 @@ export function Dashboard({ resumo, erro, exib, agora, recarregar, mudarMoeda }:
                           : new Date(r.inicio).toLocaleDateString('pt-BR', { month: 'long' })}
                 </span>
               </div>
+              <Renovacao p={p} resumo={resumo} agora={agora} />
             </section>
           )
         })}
       </div>
 
-      <CardSessao resumo={resumo} exib={exib} agora={agora} />
-
       <div className="linha">
         <Grafico resumo={resumo} dias={dias} exib={exib} />
+        <CardPlano resumo={resumo} agora={agora} />
       </div>
 
       <div className="linha">

@@ -453,7 +453,7 @@ input[type='range'] {
   display: grid;
   place-items: center;
 }
-.entrar .card {
+.entrar > .card {
   width: 460px;
   padding: 36px;
   gap: 24px;

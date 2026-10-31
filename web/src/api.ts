@@ -52,5 +52,6 @@ export const api = {
     pedir<Config>('/api/config', { method: 'PUT', body: JSON.stringify(parcial) }),
   conta: () => pedir<ContaApp>('/api/conta'),
   entrar: () => pedir<ContaApp>('/api/entrar', { method: 'POST' }),
+  sair: () => pedir<{ ok: boolean }>('/api/sair', { method: 'POST' }),
   precos: () => pedir<{ padrao: TabelaPrecos; atualizadoEm: string; fonte: string }>('/api/precos'),
 }

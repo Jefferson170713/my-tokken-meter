@@ -1,13 +1,89 @@
-import { Hourglass } from 'lucide-react'
-import type { Resumo } from './api.ts'
-import { dinheiro, inteiro, type Exibicao } from './format.ts'
+import { Info, Plug } from 'lucide-react'
+import type { Periodo, Resumo } from './api.ts'
 import { Barra, nivel } from './ui.tsx'
 
-const H5 = 5 * 3600_000
 const hora = (ts: number) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
 function falta(ms: number) {
   const min = Math.max(0, Math.ceil(ms / 60_000))
+  if (min >= 24 * 60) return `${Math.floor(min / 1440)}d ${Math.floor((min % 1440) / 60)}h`
   return min >= 60 ? `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}min` : `${min} min`
+}
+
+// Fim de cada período: a sessão de 5h vem do horário oficial (statusline) ou da estimativa pelos logs.
+function janela(p: Periodo, r: Resumo, agora: number): { inicio: number; fim: number } | null {
+  const ini = r.periodos[p].inicio
+  const d = new Date(ini)
+  if (p === 'janela5h') {
+    const oficial = r.plano?.renova5h && r.plano.renova5h > agora ? r.plano.renova5h : null
+    const fim = oficial ?? r.sessao?.fim ?? null
+    return fim ? { inicio: fim - 5 * 3600_000, fim } : null
+  }
+  if (p === 'dia')
+    return { inicio: ini, fim: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() }
+  if (p === 'semana')
+    return { inicio: ini, fim: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7).getTime() }
+  return { inicio: ini, fim: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() }
+}
+
+const ROTULO: Record<Periodo, string> = {
+  janela5h: 'do tempo',
+  dia: 'do dia',
+  semana: 'da semana',
+  mes: 'do mês',
+}
+
+// Rodapé dos cards: quando o período renova e quanto do tempo já passou (desenho aprovado no FigCraft).
+export function Renovacao({ p, resumo, agora }: { p: Periodo; resumo: Resumo; agora: number }) {
+  const j = janela(p, resumo, agora)
+  const borda = {
+    borderTop: '1px solid var(--border)',
+    paddingTop: 12,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 6,
+  }
+  if (!j)
+    return (
+      <div style={borda}>
+        <span className="muted" style={{ fontSize: 12 }}>
+          Nenhuma sessão aberta. A próxima começa na sua primeira mensagem.
+        </span>
+      </div>
+    )
+  const pct = Math.min(100, Math.max(0, ((agora - j.inicio) / (j.fim - j.inicio)) * 100))
+  const quando =
+    p === 'janela5h' || p === 'dia'
+      ? `às ${hora(j.fim)}`
+      : p === 'semana'
+        ? `${new Date(j.fim).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}, ${hora(j.fim)}`
+        : `1º ${new Date(j.fim).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}`
+  return (
+    <div style={borda}>
+      <div className="topo">
+        <span className="mono" style={{ fontWeight: 600, fontSize: 13 }}>
+          Renova em {falta(j.fim - agora)}
+        </span>
+        <span className="muted" style={{ fontSize: 12 }}>
+          {quando}
+        </span>
+      </div>
+      <div
+        className="barra"
+        style={{ height: 6 }}
+        role="progressbar"
+        aria-valuenow={Math.round(pct)}
+        aria-label={`Tempo ${ROTULO[p]}`}
+      >
+        <div style={{ width: `${pct}%`, background: 'var(--text-muted)' }} />
+      </div>
+      <span className="muted" style={{ fontSize: 12 }}>
+        {Math.round(pct)}% {ROTULO[p]}
+        {p === 'janela5h' && ` · desde ${hora(j.inicio)}`}
+        {p === 'janela5h' && !(resumo.plano?.renova5h && resumo.plano.renova5h > agora) && ' (estimado)'}
+      </span>
+    </div>
+  )
 }
 
 function Medidor({
@@ -23,7 +99,7 @@ function Medidor({
 }) {
   const n = nivel(pct, limiar)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="topo">
         <span className="muted" style={{ fontWeight: 500 }}>
           {rotulo}
@@ -47,110 +123,61 @@ function Medidor({
   )
 }
 
-// Sessão de 5h: quando renova, quanto do tempo já passou, quanto do limite foi usado e o gasto a cada 15 min.
-export function CardSessao({ resumo, exib, agora }: { resumo: Resumo; exib: Exibicao; agora: number }) {
-  const s = resumo.sessao
+// Card "Plano Claude" ao lado do gráfico: % real da janela de 5h e da semana, vinda da statusline.
+export function CardPlano({ resumo, agora }: { resumo: Resumo; agora: number }) {
   const p = resumo.plano
-  const oficial = p?.renova5h && p.renova5h > agora ? p.renova5h : null
-  const fim = oficial ?? s?.fim ?? null
-
-  if (!s || !fim)
-    return (
-      <section className="card" aria-label="Sessão de 5h">
-        <div className="rotulo" style={{ color: 'var(--text)' }}>
-          <Hourglass className="icone" aria-hidden />
-          <h2>Sessão de 5h</h2>
-        </div>
-        <span className="muted">
-          Nenhuma sessão aberta agora. A próxima começa na sua primeira mensagem ao Claude.
-        </span>
-      </section>
-    )
-
-  const inicio = fim - H5
-  const pctTempo = Math.min(100, ((agora - inicio) / H5) * 100)
-  const orc5h = resumo.periodos.janela5h.orcamento
-  const pctOrc = orc5h && resumo.unidade === 'usd' ? (s.custoUsd / orc5h) * 100 : null
-  const max = Math.max(...s.serie.map((f) => f.custoUsd)) || 1
-  const atual = Math.floor((agora - s.inicio) / (15 * 60_000))
-
+  const data = (ts: number | null) =>
+    ts
+      ? new Date(ts).toLocaleString('pt-BR', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '—'
   return (
-    <section className="card" aria-label="Sessão de 5h" style={{ gap: 16 }}>
+    <section className="card" style={{ flex: '0 0 340px' }} aria-label="Plano Claude">
       <div className="topo">
-        <div className="rotulo" style={{ color: 'var(--text)' }}>
-          <Hourglass className="icone" aria-hidden />
-          <h2>Sessão de 5h</h2>
-        </div>
-        <span className="pilula" style={{ fontFamily: 'inherit' }}>
-          {oficial ? 'horário oficial do Claude' : 'estimado pelos logs'}
+        <h2>Plano Claude</h2>
+        <span
+          className="pilula"
+          style={{ background: 'var(--surface-2)', color: 'var(--text-muted)', fontFamily: 'inherit' }}
+        >
+          % real · via statusline
         </span>
       </div>
-      <div style={{ display: 'flex', gap: 32, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <div>
-          <div className="muted">Renova em</div>
-          <div className="valor">{falta(fim - agora)}</div>
-          <div className="muted" style={{ fontSize: 13 }}>
-            às {hora(fim)} · começou às {hora(inicio)}
-          </div>
-        </div>
-        <div style={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {p?.cincoH != null ? (
+        <>
           <Medidor
-            rotulo="Tempo da sessão"
-            pct={pctTempo}
-            detalhe={`${falta(agora - inicio)} de 5h`}
-            limiar={101}
+            rotulo="Janela de 5h"
+            pct={p.cincoH}
+            detalhe={`renova às ${p.renova5h ? hora(p.renova5h) : '—'}`}
+            limiar={resumo.limiar}
           />
-          {p?.cincoH != null ? (
+          {p.semana != null && (
             <Medidor
-              rotulo="Limite do plano (real)"
-              pct={p.cincoH}
-              detalhe={`semana: ${Math.round(p.semana ?? 0)}% do limite`}
+              rotulo="Semana"
+              pct={p.semana}
+              detalhe={`renova ${data(p.renovaSemana)}`}
               limiar={resumo.limiar}
             />
-          ) : pctOrc !== null ? (
-            <Medidor
-              rotulo="Seu orçamento de 5h"
-              pct={pctOrc}
-              detalhe={`${dinheiro(s.custoUsd, exib)} de ${dinheiro(orc5h!, exib)}`}
-              limiar={resumo.limiar}
-            />
-          ) : (
-            <span className="muted" style={{ fontSize: 12 }}>
-              Defina um orçamento de 5h nas Configurações ou rode npm run integrar para ver a % real do plano.
-            </span>
           )}
-        </div>
-      </div>
-      <div>
-        <div className="topo" style={{ marginBottom: 8 }}>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Gasto a cada 15 min nesta sessão
+          <div className="muted" style={{ display: 'flex', gap: 8, fontSize: 12 }}>
+            <Info className="icone" aria-hidden />
+            Atualizado {Math.max(0, Math.round((agora - p.em) / 60_000))} min atrás. Só muda enquanto o Claude
+            Code está em uso.
+          </div>
+        </>
+      ) : (
+        <div style={{ display: 'flex', gap: 10 }} className="muted">
+          <Plug className="icone" aria-hidden />
+          <span>
+            Ainda sem dados. Com a statusline instalada (npm run integrar), a % real aparece aqui na próxima
+            mensagem que você mandar ao Claude.
           </span>
-          <span className="muted" style={{ fontSize: 12 }}>
-            {dinheiro(s.custoUsd, exib)} · {inteiro(s.mensagens)} mensagens
-          </span>
         </div>
-        <div
-          className="grafico"
-          style={{ height: 110, gap: 4, paddingBottom: 18 }}
-          role="img"
-          aria-label={`Gasto da sessão por 15 minutos, de ${hora(s.inicio)} a ${hora(s.fim)}`}
-        >
-          {s.serie.map((f, i) => (
-            <div className="coluna" key={f.inicio} title={`${hora(f.inicio)}: ${dinheiro(f.custoUsd, exib)}`}>
-              <div
-                style={{
-                  height: `${(f.custoUsd / max) * 100}%`,
-                  background: i > atual ? 'transparent' : i === atual ? 'var(--orange)' : 'var(--green)',
-                  outline: i > atual ? '1px dashed var(--border)' : undefined,
-                  minHeight: i > atual ? 0 : 2,
-                }}
-              />
-              {i % 4 === 0 && <span>{hora(f.inicio)}</span>}
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </section>
   )
 }
