@@ -44,7 +44,8 @@ if (!temHook) {
 }
 if (semStatus) s.statusLine = { type: 'command', command: CMD_STATUS }
 if (!temHook || semStatus) gravarSettings(s)
-console.log(await claude(['mcp', 'add', '--scope', 'user', 'my-tokken-meter', '--', ...CMD_MCP]))
+const mcp = await claude(['mcp', 'add', '--scope', 'user', 'my-tokken-meter', '--', ...CMD_MCP])
+console.log(/already exists/i.test(mcp) ? '  - servidor MCP: já registrado' : mcp)
 console.log(
   'Pronto. Abra uma conversa nova no Claude Code para carregar o MCP. Para desfazer: npm run desintegrar.',
 )
