@@ -2,16 +2,16 @@
 
 ## Andamento
 
-- **Fase:** implementação (Etapa 3 concluída)
-- **Branch:** `feat/api-rest-local` → merge na `dev`
-- **Agora:** Etapa 3 concluída: API REST com 7 rotas, Host e Origin checados; 17 testes
-- **Próximo:** Etapa 4, front (Vite em middleware, `npm run dev` abre o navegador)
+- **Fase:** implementação (Etapa 4 concluída)
+- **Branch:** `feat/front-dashboard` → merge na `dev`
+- **Agora:** Etapa 4 concluída: front com entrar, dashboard, histórico, configurações e tema; `npm run dev` abre o navegador
+- **Próximo:** teste do usuário; depois Etapa 5 (MCP). Docs da Etapa 4 ainda não passaram pelo documentador
 - **Etapas:**
   - [x] 0. Preparar o projeto: `.gitignore` (crítico), configs, `CLAUDE.md`, `check-segredos`, repo público, `dev`
   - [x] 1. Telas: tokens + 10 telas × 2 temas no FigCraft, SVGs e ícones → aprovadas
   - [x] 2. `core/`: parser, ingest incremental, SQLite, períodos, preços, conta e câmbio (com testes `node:test`)
   - [x] 3. API REST em `node:http` (127.0.0.1:5178, checagem de Host)
-  - [ ] 4. Front: Vite em middleware, `npm run dev` abre o navegador; dashboard, histórico, configurações, tema
+  - [x] 4. Front: Vite em middleware, `npm run dev` abre o navegador; dashboard, histórico, configurações, tema
   - [ ] 5. Servidor MCP (stdio, SDK oficial, independente do app)
   - [ ] 6. Alertas: motor, toast do Windows, banner, `Notification`, hook, statusline, `integrar`/`desintegrar`
   - [ ] 7. % do plano pelo `rate_limits` da statusline
