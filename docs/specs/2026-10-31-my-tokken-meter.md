@@ -2,20 +2,20 @@
 
 ## Andamento
 
-- **Fase:** implementação (Etapa 4 concluída)
-- **Branch:** `feat/front-dashboard` → merge na `dev`
-- **Agora:** Etapa 4 concluída: front com entrar, dashboard, histórico, configurações e tema; `npm run dev` abre o navegador
-- **Próximo:** teste do usuário; depois Etapa 5 (MCP). Docs da Etapa 4 ainda não passaram pelo documentador
+- **Fase:** concluída (Etapas 0–8)
+- **Branch:** `feat/sessao-mcp-alertas` → `dev` → `main`
+- **Agora:** app completo: sessão de 5h com gráfico, login a cada execução, MCP, alertas (Windows, hook, statusline), % do plano; 23 testes
+- **Próximo:** ajustes visuais pedidos pelo usuário; documentador atualizar ARCHITECTURE/MEMORY/TASKS das Etapas 4–8
 - **Etapas:**
   - [x] 0. Preparar o projeto: `.gitignore` (crítico), configs, `CLAUDE.md`, `check-segredos`, repo público, `dev`
   - [x] 1. Telas: tokens + 10 telas × 2 temas no FigCraft, SVGs e ícones → aprovadas
   - [x] 2. `core/`: parser, ingest incremental, SQLite, períodos, preços, conta e câmbio (com testes `node:test`)
   - [x] 3. API REST em `node:http` (127.0.0.1:5178, checagem de Host)
   - [x] 4. Front: Vite em middleware, `npm run dev` abre o navegador; dashboard, histórico, configurações, tema
-  - [ ] 5. Servidor MCP (stdio, SDK oficial, independente do app)
-  - [ ] 6. Alertas: motor, toast do Windows, banner, `Notification`, hook, statusline, `integrar`/`desintegrar`
-  - [ ] 7. % do plano pelo `rate_limits` da statusline
-  - [ ] 8. README, diagramas, `check-segredos` e publicação
+  - [x] 5. Servidor MCP (stdio, SDK oficial, independente do app)
+  - [x] 6. Alertas: motor, toast do Windows, banner, `Notification`, hook, statusline, `integrar`/`desintegrar`
+  - [x] 7. % do plano pelo `rate_limits` da statusline
+  - [x] 8. README, diagramas, `check-segredos` e publicação
 
 ## Plano: my-tokken-meter
 
