@@ -16,13 +16,7 @@ export type Tema = 'escuro' | 'claro'
 export function App() {
   const [tema, setTema] = useState<Tema>(local.ler('mtm-tema') === 'claro' ? 'claro' : 'escuro')
   const [rota, setRota] = useState<Rota>(rotaAtual)
-  const [entrou, setEntrou] = useState(() => {
-    try {
-      return sessionStorage.getItem('mtm-entrou') === '1'
-    } catch {
-      return false
-    }
-  })
+  const [entrou, setEntrou] = useState(false)
   const [resumo, setResumo] = useState<Resumo | null>(null)
   const [erro, setErro] = useState<Error | null>(null)
   const [agora, setAgora] = useState(() => Date.now())
@@ -56,19 +50,7 @@ export function App() {
     }
   }, [entrou, versao])
 
-  if (!entrou)
-    return (
-      <Entrar
-        aoEntrar={() => {
-          try {
-            sessionStorage.setItem('mtm-entrou', '1')
-          } catch {
-            // sem sessionStorage: pede de novo na próxima vez
-          }
-          setEntrou(true)
-        }}
-      />
-    )
+  if (!entrou) return <Entrar aoEntrar={() => setEntrou(true)} />
 
   const exib: Exibicao = { moeda: resumo?.moeda ?? 'BRL', cotacao: resumo?.cotacao ?? null }
   const mudarMoeda = async (moeda: Config['moeda']) => {

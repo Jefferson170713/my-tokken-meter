@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import { chaveDia } from '../../core/periods.ts'
 import { api, ErroApi, type LinhaHistorico, type Periodo, type Resumo } from './api.ts'
 import { dataLonga, dinheiro, emReais, haQuanto, inteiro, tokens, type Exibicao } from './format.ts'
+import { CardSessao } from './Sessao.tsx'
 import { Banner, Barra, Cabecalho, local, nivel, Segmentos } from './ui.tsx'
 
 type Props = {
@@ -252,26 +253,10 @@ export function Dashboard({ resumo, erro, exib, agora, recarregar, mudarMoeda }:
         })}
       </div>
 
+      <CardSessao resumo={resumo} exib={exib} agora={agora} />
+
       <div className="linha">
         <Grafico resumo={resumo} dias={dias} exib={exib} />
-        <section className="card" style={{ flex: '0 0 340px' }} aria-label="Plano Claude">
-          <div className="topo">
-            <h2>Plano Claude</h2>
-            <span
-              className="pilula"
-              style={{ background: 'var(--surface-2)', color: 'var(--text-muted)', fontFamily: 'inherit' }}
-            >
-              % real · via statusline
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: 10 }} className="muted">
-            <Plug className="icone" aria-hidden />
-            <span>
-              Indisponível por enquanto. A % real da janela de 5h e da semana chega quando a statusline do app
-              for instalada com <span className="mono">npm run integrar</span>.
-            </span>
-          </div>
-        </section>
       </div>
 
       <div className="linha">

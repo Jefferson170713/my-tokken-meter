@@ -1,11 +1,11 @@
 import { CircleCheck, Gauge, Info, RefreshCw, Terminal, TriangleAlert } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { api, type Conta } from './api.ts'
+import { api, type ContaApp } from './api.ts'
 
 const iniciais = (email: string) => email.slice(0, 2).toUpperCase()
 
 export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
-  const [conta, setConta] = useState<Conta | null>(null)
+  const [conta, setConta] = useState<ContaApp | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [tentativa, setTentativa] = useState(0)
   const verificar = useCallback(() => {
@@ -16,13 +16,17 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   useEffect(() => {
     let vivo = true
     api.conta().then(
-      (c) => vivo && setConta(c),
+      (c) => {
+        if (!vivo) return
+        setConta(c)
+        if (c.entrou) aoEntrar() // já entrou nesta execução do app (ex.: recarregou a página)
+      },
       (e: Error) => vivo && setErro(e.message),
     )
     return () => {
       vivo = false
     }
-  }, [tentativa])
+  }, [tentativa, aoEntrar])
 
   return (
     <div className="entrar">
@@ -71,10 +75,19 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
             <button
               className="botao primario"
               style={{ justifyContent: 'center', padding: 12 }}
-              onClick={aoEntrar}
+              onClick={() => api.entrar().then(aoEntrar, (e: Error) => setErro(e.message))}
             >
               Entrar no painel
             </button>
+            {conta.ultima && (
+              <span className="muted" style={{ fontSize: 12, textAlign: 'center' }}>
+                Último acesso: {conta.ultima.email} em{' '}
+                {new Date(conta.ultima.entrouEm).toLocaleString('pt-BR', {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })}
+              </span>
+            )}
           </>
         )}
         {(conta?.conectada === false || erro) && (

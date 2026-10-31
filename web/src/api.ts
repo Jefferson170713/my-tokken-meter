@@ -4,8 +4,10 @@ import type { Conta } from '../../core/conta.ts'
 import type { Periodo } from '../../core/periods.ts'
 import type { TabelaPrecos } from '../../core/prices.ts'
 import type { Agrupar, ResumoPeriodo, Totais } from '../../core/summary.ts'
+import type { Plano } from '../../core/plan.ts'
+import type { Sessao } from '../../core/sessao.ts'
 
-export type { Config, Conta, Cotacao, Periodo, ResumoPeriodo, TabelaPrecos, Totais }
+export type { Config, Conta, Cotacao, Periodo, Plano, ResumoPeriodo, Sessao, TabelaPrecos, Totais }
 export type Resumo = {
   periodos: Record<Periodo, ResumoPeriodo>
   moeda: Config['moeda']
@@ -15,8 +17,14 @@ export type Resumo = {
   linhasIgnoradas: number
   ultimaLeitura: number
   tabelaPrecos: { atualizadoEm: string; fonte: string }
+  sessao: Sessao | null
+  plano: Plano | null
 }
 export type LinhaHistorico = Totais & { chave: string }
+export type ContaApp = Conta & {
+  entrou: boolean
+  ultima: { email: string; plano: string | null; entrouEm: number } | null
+}
 
 export class ErroApi extends Error {
   status: number
@@ -42,6 +50,7 @@ export const api = {
   config: () => pedir<Config>('/api/config'),
   salvarConfig: (parcial: Partial<Config>) =>
     pedir<Config>('/api/config', { method: 'PUT', body: JSON.stringify(parcial) }),
-  conta: () => pedir<Conta>('/api/conta'),
+  conta: () => pedir<ContaApp>('/api/conta'),
+  entrar: () => pedir<ContaApp>('/api/entrar', { method: 'POST' }),
   precos: () => pedir<{ padrao: TabelaPrecos; atualizadoEm: string; fonte: string }>('/api/precos'),
 }
