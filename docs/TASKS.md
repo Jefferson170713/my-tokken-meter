@@ -7,10 +7,6 @@ Etapas da spec. Branch de cada uma em [spec, Branches](specs/2026-10-31-my-tokke
 
 ## Em aberto
 
-- [ ] **2. `core/`** — parser, ingest incremental, SQLite, períodos, preços, `conta.ts` (`claude auth status`) e
-      `cambio.ts` (PTAX do Banco Central, 1x por dia, cache em `data/`). Pronto: testes `node:test` de dedupe,
-      `<synthetic>`, leitura incremental, períodos/fuso e preços passando; conta lida sem ler o token (com e sem
-      login); câmbio usa a última cotação salva quando está sem internet.
 - [ ] **3. API REST** — `node:http` em 127.0.0.1:5178 com checagem de Host; expõe também a conta e a cotação.
       Pronto: rotas `/api/*` respondem, Host desconhecido é recusado e a PTAX é a única chamada de rede.
 - [ ] **4. Front** — Vite em middleware; telas de [DESIGN](DESIGN.md#telas-etapa-1): entrada (conectada e sem conta),
@@ -27,6 +23,11 @@ Etapas da spec. Branch de cada uma em [spec, Branches](specs/2026-10-31-my-tokke
 
 ## Concluídas
 
+- [x] 2026-10-31 · **2. `core/`** — parser, ingest incremental, SQLite, períodos, preços, `summary.ts`,
+      `config.ts`, `conta.ts` (via `claude auth status`) e `cambio.ts` (PTAX do Banco Central, 1x por dia, cache em
+      `data/cambio.json`). 10 testes `node:test` em `tests/core.test.ts` (dedupe, `<synthetic>`, leitura incremental,
+      períodos com `TZ` fixo, preços, resumo, config, conta com e sem login, câmbio offline). Conferido com logs reais:
+      1ª leitura 169 ms (298 mensagens), 2ª 16 ms. Detalhes em [ARCHITECTURE](ARCHITECTURE.md#núcleo-core-etapa-2).
 - [x] 2026-10-31 · **1. Telas** — 10 telas × 2 temas = 20 SVGs em `docs/design/svg/` (inclui as duas de entrada),
       fonte `docs/design/my-tokken-meter.figcraft` e ícones Lucide em `docs/design/icons/`, aprovados pelo usuário.
       Lista em [docs/design/README.md](design/README.md).

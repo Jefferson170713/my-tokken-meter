@@ -48,6 +48,28 @@ Formato de cada entrada: `aaaa-mm-dd · o que aconteceu · decisão/regra`
   dobraria.
 - 2026-10-31 · conta e câmbio (planejados) · `core/conta.ts` roda `claude auth status` (nunca lê o token nem o
   `.credentials.json`); `core/cambio.ts` busca a PTAX e guarda a última cotação em `data/`.
+- 2026-10-31 · Etapa 2 (`core/`) · orçamento **guardado em US$ ou em tokens** (`config.unidade`); a moeda (R$ | US$)
+  é **só exibição**. Assim a cotação do dia não muda o orçamento salvo nem o histórico. Refina a decisão "orçamentos na
+  moeda escolhida" (spec §11): o usuário digita e vê na moeda dele, mas o valor guardado é em US$ (`core/config.ts:10`).
+- 2026-10-31 · preços derivados · a tabela oficial (cacheada em 2026-10-06, `core/prices.default.json`) traz entrada e
+  saída; a leitura de cache é a oficial onde indicada, senão 0,1x a entrada; a escrita de cache sai da regra padrão
+  (5 min = 1,25x, 1 h = 2x a entrada). Opus com `speed: "fast"` custa 2x (`multiplicadorRapido`). Conferir na página
+  oficial quando os preços mudarem.
+- 2026-10-31 · modelo sem preço · os tokens contam e o modelo vai para `semPreco`; o custo dele fica fora da soma
+  (`core/summary.ts:42-43`), em vez do `custo=null` previsto.
+- 2026-10-31 · dedupe com `max` · a mesma mensagem aparece várias vezes no streaming com `usage` parcial; o
+  `ON CONFLICT` grava o maior valor de cada coluna de tokens (`core/ingest.ts:19-26`), não a primeira nem a última
+  linha.
+- 2026-10-31 · lição: agrupamento por dia em JS · `historico()` agrupa com `chaveDia()` (fuso local, o mesmo de
+  `limites()`) em vez de `date()` do SQLite, que trabalha em UTC por padrão e poria mensagens da noite no dia seguinte
+  (`core/summary.ts:72-86`).
+- 2026-10-31 · lição: TZ nos testes · os testes de períodos e resumo fixam `process.env.TZ = 'America/Sao_Paulo'`
+  (`tests/core.test.ts:91,110`); sem isso o resultado muda conforme o fuso da máquina.
+- 2026-10-31 · conta sem PATH · o `claude` nem sempre está no PATH; `acharClaude()` usa `MTM_CLAUDE_BIN` ou o binário
+  nativo da extensão do VS Code antes de cair no `claude` (`core/conta.ts:28-51`). Sem login o comando pode sair com
+  código diferente de 0 e ainda imprimir o JSON.
+- 2026-10-31 · conferência com logs reais (Etapa 2) · 1ª leitura 169 ms (298 mensagens), 2ª leitura 16 ms
+  (incremental); custo do dia coerente com o painel do ponytail.
 - 2026-10-31 · lição: FigCraft · os componentes de ícone ficam na mesma página das telas (não há página de
   componentes separada); o `--red-soft` escuro ainda é `#F87171` a 15%, por isso essa cor aparece nos SVGs escuros.
 

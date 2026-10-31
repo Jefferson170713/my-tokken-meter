@@ -11,7 +11,7 @@ orçamento, API REST para o navegador e servidor MCP para o Claude consultar. Ro
 
 ## Estrutura
 
-Estrutura planejada na spec. Hoje (Etapa 1) existem `scripts/`, `docs/` (specs, docs principais e `design/` com as telas
+Estrutura planejada na spec. Hoje (Etapa 2) existem `core/`, `tests/`, `scripts/`, `docs/` (specs, docs principais e `design/` com as telas
 aprovadas), `.claude/` e as configs da raiz; as demais pastas nascem nas próximas etapas.
 
 | Pasta           | O que tem                                                                                                                       |

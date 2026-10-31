@@ -2,14 +2,14 @@
 
 ## Andamento
 
-- **Fase:** implementação (Etapa 1 concluída)
-- **Branch:** `docs/telas-svg-figcraft` → merge na `dev`
-- **Agora:** Etapa 1 concluída: 20 telas (10 × claro/escuro) aprovadas em `docs/design/`
-- **Próximo:** Etapa 2, `core/` (logs, SQLite, períodos, preços, conta e câmbio)
+- **Fase:** implementação (Etapa 2 concluída)
+- **Branch:** `feat/leitor-logs-consumo` → merge na `dev`
+- **Agora:** Etapa 2 concluída: `core/` com 11 testes; conferido com os logs reais
+- **Próximo:** Etapa 3, API REST (`server/main.ts`)
 - **Etapas:**
   - [x] 0. Preparar o projeto: `.gitignore` (crítico), configs, `CLAUDE.md`, `check-segredos`, repo público, `dev`
   - [x] 1. Telas: tokens + 10 telas × 2 temas no FigCraft, SVGs e ícones → aprovadas
-  - [ ] 2. `core/`: parser, ingest incremental, SQLite, períodos, preços, conta e câmbio (com testes `node:test`)
+  - [x] 2. `core/`: parser, ingest incremental, SQLite, períodos, preços, conta e câmbio (com testes `node:test`)
   - [ ] 3. API REST em `node:http` (127.0.0.1:5178, checagem de Host)
   - [ ] 4. Front: Vite em middleware, `npm run dev` abre o navegador; dashboard, histórico, configurações, tema
   - [ ] 5. Servidor MCP (stdio, SDK oficial, independente do app)
@@ -190,28 +190,28 @@ consultar o consumo.
 
 ### 11. Decisões tomadas
 
-| Pergunta                  | Resposta                                                                                                                                                             | O que implica                                                                                                                                         |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| O que é 100% do dia?      | **Os dois:** orçamento próprio + % real do plano                                                                                                                     | Orçamento é a base; % do plano é módulo opcional e frágil                                                                                             |
-| Como o Claude consulta?   | **MCP + REST**                                                                                                                                                       | Servidor MCP no projeto, registrado no escopo de usuário                                                                                              |
-| Onde avisar aos 20%?      | **Todos:** banner, notificação, Claude Code, statusline — "desde que não atrapalhe o Claude"                                                                         | Hook e statusline com timeout curto e um aviso por período                                                                                            |
-| Fonte de dados            | **Claude Code deste PC**                                                                                                                                             | claude.ai web e PC da empresa ficam de fora                                                                                                           |
-| Períodos                  | **5h + dia + semana + mês**                                                                                                                                          | Janela de 5h móvel; dia, semana e mês fixos no calendário local                                                                                       |
-| Ícones                    | **Lucide**                                                                                                                                                           | SVGs no projeto + `lucide-react`                                                                                                                      |
-| Visual                    | **Claro e escuro**, verde + laranja + branco; no escuro troca só o branco                                                                                            | Duas versões de cada tela                                                                                                                             |
-| `/preparar-projeto`       | **Adaptar a este projeto**                                                                                                                                           | Vira a Etapa 0, depois da aprovação                                                                                                                   |
-| Telas antes do código     | Todas em SVG, desenhadas no FigCraft com as skills de design                                                                                                         | Etapa 1 com portão de aprovação                                                                                                                       |
-| Repositório               | Público, `my-tokken-meter`                                                                                                                                           | Cuidado redobrado com segredos e dados                                                                                                                |
-| % do plano                | **Pela statusline** (`rate_limits`), sem token                                                                                                                       | Endpoint OAuth descartado; atualiza só com o Claude Code em uso                                                                                       |
-| Statusline                | **A do app**, com badge `[PONYTAIL]`                                                                                                                                 | Instalada por `npm run integrar` só se não houver outra                                                                                               |
-| Hook                      | **Mostra ao usuário e informa o Claude**                                                                                                                             | `systemMessage` + `additionalContext`, uma vez por alerta                                                                                             |
-| Cor do limite             | **80% laranja, 100% vermelho** + ícone `triangle-alert`                                                                                                              | Acrescentar `--red` (claro `#B91C1C`, escuro `#FF5A5A`, revisto na Etapa 1; era `#F87171`) aos tokens                                                 |
-| Caminhos pessoais         | **Trocados por `~`**                                                                                                                                                 | Nenhum caminho de usuário do Windows em arquivo commitado                                                                                             |
-| Licença                   | **MIT**                                                                                                                                                              | `LICENSE` na Etapa 0; README cita a ISC do Lucide                                                                                                     |
-| Tela de entrada (Etapa 1) | **Entrar com a conta do Claude** via `claude auth status` (JSON com `loggedIn`, `authMethod`, `email`, `subscriptionType`, `projectsDirectory`), sem ler o token     | Duas telas (conta conectada e sem conta, com `claude auth login`) + card "Conta do Claude" nas Configurações; sem OAuth de terceiros; `core/conta.ts` |
-| Moeda (Etapa 1)           | **R$ e US$**: seletor no cabeçalho + card "Moeda" (moeda padrão) nas Configurações; cotação **só automática** pela PTAX do Banco Central, 1x por dia                 | Única chamada de rede do app; offline usa a última cotação salva; orçamentos na moeda escolhida; `core/cambio.ts` com cache em `data/`                |
-| Modo escuro (Etapa 1)     | **Neutro (preto)**: `bg #0A0A0A`, `surface #141414`, `surface-2 #1F1F1F`, `border #2A2A2A`, `text #FAFAFA`, `text-muted #A1A1A1`, `on-accent #0A0A0A`, `red #FF5A5A` | Verdes, laranjas e modo claro inalterados; AA conferido (`text-muted` 7,1:1 no `surface`; `red` 6,0:1)                                                |
-| Estados (Etapa 1)         | **80% laranja (`triangle-alert`), 100% ou mais vermelho (`octagon-alert`)**, inclusive barra do gráfico e tabela                                                     | Ícones Lucide extras em `docs/design/icons/`; estado nunca só pela cor                                                                                |
+| Pergunta                  | Resposta                                                                                                                                                             | O que implica                                                                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| O que é 100% do dia?      | **Os dois:** orçamento próprio + % real do plano                                                                                                                     | Orçamento é a base; % do plano é módulo opcional e frágil                                                                                                                                           |
+| Como o Claude consulta?   | **MCP + REST**                                                                                                                                                       | Servidor MCP no projeto, registrado no escopo de usuário                                                                                                                                            |
+| Onde avisar aos 20%?      | **Todos:** banner, notificação, Claude Code, statusline — "desde que não atrapalhe o Claude"                                                                         | Hook e statusline com timeout curto e um aviso por período                                                                                                                                          |
+| Fonte de dados            | **Claude Code deste PC**                                                                                                                                             | claude.ai web e PC da empresa ficam de fora                                                                                                                                                         |
+| Períodos                  | **5h + dia + semana + mês**                                                                                                                                          | Janela de 5h móvel; dia, semana e mês fixos no calendário local                                                                                                                                     |
+| Ícones                    | **Lucide**                                                                                                                                                           | SVGs no projeto + `lucide-react`                                                                                                                                                                    |
+| Visual                    | **Claro e escuro**, verde + laranja + branco; no escuro troca só o branco                                                                                            | Duas versões de cada tela                                                                                                                                                                           |
+| `/preparar-projeto`       | **Adaptar a este projeto**                                                                                                                                           | Vira a Etapa 0, depois da aprovação                                                                                                                                                                 |
+| Telas antes do código     | Todas em SVG, desenhadas no FigCraft com as skills de design                                                                                                         | Etapa 1 com portão de aprovação                                                                                                                                                                     |
+| Repositório               | Público, `my-tokken-meter`                                                                                                                                           | Cuidado redobrado com segredos e dados                                                                                                                                                              |
+| % do plano                | **Pela statusline** (`rate_limits`), sem token                                                                                                                       | Endpoint OAuth descartado; atualiza só com o Claude Code em uso                                                                                                                                     |
+| Statusline                | **A do app**, com badge `[PONYTAIL]`                                                                                                                                 | Instalada por `npm run integrar` só se não houver outra                                                                                                                                             |
+| Hook                      | **Mostra ao usuário e informa o Claude**                                                                                                                             | `systemMessage` + `additionalContext`, uma vez por alerta                                                                                                                                           |
+| Cor do limite             | **80% laranja, 100% vermelho** + ícone `triangle-alert`                                                                                                              | Acrescentar `--red` (claro `#B91C1C`, escuro `#FF5A5A`, revisto na Etapa 1; era `#F87171`) aos tokens                                                                                               |
+| Caminhos pessoais         | **Trocados por `~`**                                                                                                                                                 | Nenhum caminho de usuário do Windows em arquivo commitado                                                                                                                                           |
+| Licença                   | **MIT**                                                                                                                                                              | `LICENSE` na Etapa 0; README cita a ISC do Lucide                                                                                                                                                   |
+| Tela de entrada (Etapa 1) | **Entrar com a conta do Claude** via `claude auth status` (JSON com `loggedIn`, `authMethod`, `email`, `subscriptionType`, `projectsDirectory`), sem ler o token     | Duas telas (conta conectada e sem conta, com `claude auth login`) + card "Conta do Claude" nas Configurações; sem OAuth de terceiros; `core/conta.ts`                                               |
+| Moeda (Etapa 1)           | **R$ e US$**: seletor no cabeçalho + card "Moeda" (moeda padrão) nas Configurações; cotação **só automática** pela PTAX do Banco Central, 1x por dia                 | Única chamada de rede do app; offline usa a última cotação salva; orçamentos editados na moeda escolhida e guardados em US$ (a moeda é só exibição, Etapa 2); `core/cambio.ts` com cache em `data/` |
+| Modo escuro (Etapa 1)     | **Neutro (preto)**: `bg #0A0A0A`, `surface #141414`, `surface-2 #1F1F1F`, `border #2A2A2A`, `text #FAFAFA`, `text-muted #A1A1A1`, `on-accent #0A0A0A`, `red #FF5A5A` | Verdes, laranjas e modo claro inalterados; AA conferido (`text-muted` 7,1:1 no `surface`; `red` 6,0:1)                                                                                              |
+| Estados (Etapa 1)         | **80% laranja (`triangle-alert`), 100% ou mais vermelho (`octagon-alert`)**, inclusive barra do gráfico e tabela                                                     | Ícones Lucide extras em `docs/design/icons/`; estado nunca só pela cor                                                                                                                              |
 
 **Tamanho:** grande — **Público:** o próprio usuário (uso pessoal, repo público como portfólio)
 
@@ -256,11 +256,11 @@ componentes) · `tests/` (`node:test` + fixtures fictícias) · `docs/design/` �
 
 - **Custo:** calculado na consulta, a partir dos tokens. Editar a tabela de preços recalcula todo o histórico. O
   modelo é encontrado pelo nome exato ou pelo maior prefixo; modelo sem preço gera `custo=null` e os tokens contam
-  mesmo assim.
-- **Conta (`core/conta.ts`, planejado):** roda `claude auth status` e usa o JSON (`loggedIn`, `authMethod`, `email`,
-  `subscriptionType`, `projectsDirectory`). Nunca lê o token nem o `.credentials.json`.
-- **Câmbio (`core/cambio.ts`, planejado):** busca a PTAX do Banco Central uma vez por dia e guarda a última cotação
-  em `data/`; sem internet, usa a salva. É a única chamada de rede do app.
+  mesmo assim. _(Etapa 2: em vez de `custo=null`, o modelo vai para a lista `semPreco` e fica fora da soma do custo.)_
+- **Conta (`core/conta.ts`, feito na Etapa 2):** roda `claude auth status` e usa o JSON (`loggedIn`, `authMethod`,
+  `email`, `subscriptionType`, `projectsDirectory`). Nunca lê o token nem o `.credentials.json`.
+- **Câmbio (`core/cambio.ts`, feito na Etapa 2):** busca a PTAX do Banco Central uma vez por dia e guarda a última
+  cotação em `data/cambio.json`; sem internet, usa a salva. É a única chamada de rede do app.
 - **Períodos:** janela de 5h móvel; dia, semana (segunda) e mês em hora local. Testes com `TZ` fixo.
 - **API:**
   - Rotas `GET /api/resumo`, `/historico`, `/config` (+`PUT`), `/plano`, `/status` e `/health`.
@@ -281,6 +281,16 @@ componentes) · `tests/` (`node:test` + fixtures fictícias) · `docs/design/` �
     parciais, e o histórico sobrevive a arquivos apagados.
   - **Períodos e preços:** viradas de semana e de mês, horário de verão, busca por prefixo e modelo sem preço.
   - **Alertas e hook:** os alertas não se repetem; o hook roda em menos de 300 ms.
+- **Etapa 2 (o que divergiu ou foi detalhado):**
+  - Banco só com as tabelas `messages` e `files` (`path`, `offset`, `ignoradas`); `files` não guarda `size` nem
+    `mtime` (arquivo menor que o offset é relido do zero). Não há tabela `meta` nem `alerts_sent`: alertas são da
+    Etapa 6.
+  - Dedupe grava o maior valor de cada coluna de tokens quando a mesma mensagem reaparece.
+  - Orçamentos guardados em US$ ou em tokens (`config.unidade`); a moeda é só exibição. Ver
+    [MEMORY](../MEMORY.md#técnico-desenho-técnico).
+  - Preços: escrita de cache derivada (5 min = 1,25x, 1 h = 2x a entrada); Opus em fast mode = 2x.
+  - Testes de períodos com `TZ = America/Sao_Paulo`: cobrem virada de semana e de mês; horário de verão não tem teste
+    próprio. Detalhes do `core/` em [ARCHITECTURE](../ARCHITECTURE.md#núcleo-core-etapa-2).
 - **Etapa 1:**
   - Planejado: 8 telas × 2 temas = 16 SVGs. **Entregue e aprovado:** 10 telas × 2 temas = 20 SVGs; entraram as duas
     telas de entrada (conta conectada e sem conta). Lista em [docs/design/README.md](../design/README.md).
