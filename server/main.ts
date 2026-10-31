@@ -55,9 +55,9 @@ export function criarServidor(opcoes: Opcoes = {}) {
   let ultimaLeitura = 0
   let erroLeitura: string | null = null
   let conta: { valor: Conta; em: number } | null = null
-  // a cada vez que o app sobe, pede para entrar de novo; quem entrou fica salvo em data/conta.json
-  let entrou = false
+  // quem entrou fica salvo em data/conta.json: o app abre direto no painel até a pessoa sair
   const arquivoConta = path.join(dados, 'conta.json')
+  const entrou = () => ultimaConta()?.logado === true
   const ultimaConta = () => {
     try {
       return JSON.parse(fs.readFileSync(arquivoConta, 'utf8'))
@@ -143,15 +143,19 @@ export function criarServidor(opcoes: Opcoes = {}) {
     },
     'GET /api/conta': async () => {
       if (!conta || Date.now() - conta.em > 60_000) conta = { valor: await lerConta(), em: Date.now() }
-      return [200, { ...conta.valor, entrou, ultima: ultimaConta() }]
+      return [200, { ...conta.valor, entrou: entrou(), ultima: ultimaConta() }]
+    },
+    'POST /api/sair': () => {
+      const u = ultimaConta()
+      if (u) gravarJson(arquivoConta, { ...u, logado: false })
+      return [200, { ok: true }]
     },
     'POST /api/entrar': async () => {
       conta = { valor: await lerConta(), em: Date.now() }
       if (!conta.valor.conectada) return [409, { erro: 'nenhuma conta conectada no Claude Code' }]
       const { email, plano, metodo } = conta.valor
-      gravarJson(arquivoConta, { email, plano, metodo, entrouEm: Date.now() })
-      entrou = true
-      return [200, { ...conta.valor, entrou, ultima: ultimaConta() }]
+      gravarJson(arquivoConta, { email, plano, metodo, entrouEm: Date.now(), logado: true })
+      return [200, { ...conta.valor, entrou: true, ultima: ultimaConta() }]
     },
     'GET /api/cambio': async () => [200, await obterCotacao(dados)],
     'GET /api/precos': () => [200, { padrao: tabelaPadrao, ...tabelaInfo }],
