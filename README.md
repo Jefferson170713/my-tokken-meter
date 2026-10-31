@@ -10,11 +10,13 @@ orçamento que definiu.
 
 - **Painel no navegador**, tema claro e escuro: visão geral, histórico (por dia, sessão, projeto e modelo) e
   configurações. Telas em [`docs/design/`](docs/design/README.md).
-- **Sessão de 5h**: quando renova, barra de % do tempo, % do limite e gráfico do gasto a cada 15 min.
-- **Entrada pela sua conta do Claude** a cada vez que o app sobe, lida com `claude auth status` (sem ler o token); a
-  última conta fica salva em `data/conta.json`.
+- **Quando cada período renova**: os cards de 5h, dia, semana e mês mostram "Renova em…", o horário e a % do tempo
+  que já passou. A sessão de 5h usa o horário oficial da statusline ou uma estimativa pelos logs.
+- **Entrada pela sua conta do Claude**, lida com `claude auth status` (sem ler o token); o login fica salvo em
+  `data/conta.json` e o app abre direto no painel até você clicar em **Sair**.
 - **R$ ou US$**, com a cotação PTAX do Banco Central (a única chamada de rede do app, uma vez por dia).
-- **Alertas aos 80% e 100%**: banner, notificação do Windows, aviso dentro do Claude Code e statusline.
+- **Alertas aos 80% e 100%** (o 80% segue o limiar que você define): banner, notificação do Windows, aviso dentro
+  do Claude Code e statusline, cada um uma vez por período.
 - **% real do plano** (5h e semana), lida da statusline do Claude Code, sem usar o seu token.
 - **Servidor MCP**: pergunte ao Claude "quanto já usei hoje?".
 

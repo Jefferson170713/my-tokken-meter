@@ -28,8 +28,14 @@ Dados das telas são **fictícios**.
 - Escuro neutro (preto `#0A0A0A`), contraste AA conferido; claro inalterado.
 - Valores em `JetBrains Mono`; textos em `IBM Plex Sans`.
 
+A tela 01 foi redesenhada depois da Etapa 1 com o rodapé "Renova em…" nos 4 cards (aprovada; detalhes em
+[DESIGN.md](../DESIGN.md#rodapé-de-renovação-nos-cards-etapa-4)). As telas 02 e 03 ainda mostram os cards no formato
+antigo.
+
 ## Prévia
 
 ![Dashboard escuro](svg/01-dashboard-escuro.svg)
+
+![Dashboard escuro com o rodapé de renovação (PNG)](previa-dashboard-escuro.png)
 
 ![Dashboard com alerta, claro](svg/02-dashboard-alerta-claro.svg)

@@ -3,7 +3,9 @@
 Relacionados: [Spec](specs/2026-10-31-my-tokken-meter.md#tokens-de-cor-aa) · [PRD](PRD.md) · [TASKS](TASKS.md) ·
 [MEMORY](MEMORY.md) · [Telas](design/README.md)
 
-> Telas **aprovadas** pelo usuário em 2026-10-31 (Etapa 1). O código de interface segue esses SVGs.
+> Telas **aprovadas** pelo usuário em 2026-10-31 (Etapa 1). O código de interface segue esses SVGs. O desenho no
+> FigCraft é a **referência**: mudança visual vai primeiro no desenho, é aprovada e só depois entra no código (ver
+> [RULES](RULES.md#código)).
 
 ## Princípios
 
@@ -20,7 +22,7 @@ Relacionados: [Spec](specs/2026-10-31-my-tokken-meter.md#tokens-de-cor-aa) · [P
 - Conta do Claude lida com `claude auth status` (e-mail e plano), sem ler o token.
 - Custo rotulado como "estimado (preço de API)"; os rótulos devem deixar claro que a janela móvel de 5h do orçamento
   não é a janela real da Anthropic.
-- Valores em `JetBrains Mono`; textos em `IBM Plex Sans`.
+- Valores em `JetBrains Mono`; textos em `IBM Plex Sans` (no front, pacotes `@fontsource` locais, sem rede).
 
 ## Tokens de cor (AA)
 
@@ -49,6 +51,8 @@ Variáveis da coleção **Tema** (modos Escuro e Claro) em `docs/design/my-tokke
   passou a `#FF5A5A` (o `--red-soft` escuro ainda usa `#F87171` a 15%).
 - Escuro neutro decidido na Etapa 1 (spec §11, "Modo escuro"); verdes, laranjas e o modo claro não mudaram.
 - Contraste conferido no escuro: `--text-muted` 7,1:1 no `--surface`; `--red` 6,0:1 no `--surface`.
+- No código, os tokens ficam em `web/src/styles.css` (`[data-theme='escuro']` e `[data-theme='claro']`). Diferença
+  conhecida: lá o `--red-soft` escuro é `#FF5A5A` a 15% (`web/src/styles.css:17`), não `#F87171`.
 
 ## Telas (Etapa 1)
 
@@ -72,3 +76,19 @@ ficam na mesma página), SVGs em `docs/design/svg/`, ícones em `docs/design/ico
 - **Entrar (conta conectada):** mostra a conta de `claude auth status`. **Sem conta:** mostra o comando
   `claude auth login`.
 - **Configurações:** incluem os cards "Conta do Claude" e "Moeda" (moeda padrão).
+
+## Rodapé de renovação nos cards (Etapa 4)
+
+Mudança desenhada no FigCraft depois da Etapa 1 e aprovada pelo usuário: tela 01 (claro e escuro) e
+`docs/design/previa-dashboard-escuro.png`. No código: `Renovacao` em `web/src/Sessao.tsx`.
+
+- Os **4 cards** (5h, dia, semana, mês) ganharam, abaixo do rodapé do orçamento, uma faixa com "Renova em 2h 15min"
+  (`JetBrains Mono`), o horário ao lado ("às 16:00", "seg, 00:00", "1º nov"), uma barra fina (`--text-muted`) e a % do
+  tempo já passado ("40% do dia").
+- **5h:** usa o horário oficial que a statusline grava; sem ele, a estimativa pelos logs, com "desde HH:MM" e
+  "(estimado)". Sem sessão aberta: "Nenhuma sessão aberta. A próxima começa na sua primeira mensagem." **Dia:**
+  meia-noite. **Semana:** segunda seguinte. **Mês:** dia 1º.
+- O **card próprio da sessão de 5h** (com gráfico a cada 15 min) foi **removido**; o card **"Plano Claude"** (% real
+  da 5h e da semana, "% real · via statusline") fica ao lado do gráfico de 14 dias.
+- A barra lateral ganhou o botão **Sair** (ícone `log-out`), acima do seletor de tema.
+- Pendente: as telas 02 (com alerta) e 03 (sem orçamento) ainda mostram os cards sem o rodapé ([TASKS](TASKS.md)).

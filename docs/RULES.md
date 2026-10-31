@@ -36,6 +36,9 @@ Regras que não podem quebrar. Fonte: `CLAUDE.md` e spec §6. Em caso de conflit
 - Em `mcp/`, **nunca** `console.log` (o stdout é o canal do protocolo).
 - Hook e statusline precisam ser rápidos (< 300 ms) e tolerar o app desligado.
 - **Telas aprovadas antes do código** (Etapa 1 com portão de aprovação).
+- **O FigCraft é a referência visual:** toda mudança visual é feita primeiro no desenho
+  (`docs/design/my-tokken-meter.figcraft`), aprovada pelo usuário e só depois no código (regra do usuário,
+  2026-10-31).
 - Não tocar (formatador, linter e agentes): `data/`, `dist/`, `node_modules/`, `package-lock.json`,
   `docs/design/svg/`, `docs/design/icons/` e arquivos dos plugins (ponytail, ECC).
 - Validações: `npm test && npm run lint && npm run build && npm run check:segredos`.

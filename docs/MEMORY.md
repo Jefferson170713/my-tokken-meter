@@ -34,6 +34,17 @@ Formato de cada entrada: `aaaa-mm-dd · o que aconteceu · decisão/regra`
   Verdes, laranjas e modo claro inalterados. AA conferido (`text-muted` 7,1:1 no `surface`; `red` 6,0:1).
 - 2026-10-31 · estados · 80% laranja (`triangle-alert`), 100% ou mais vermelho (`octagon-alert`), inclusive barra do
   gráfico e tabela; estado nunca só pela cor.
+- 2026-10-31 · login (Etapa 4 em diante) · primeiro a entrada pedia a conta a cada execução do app (commit `d71db02`);
+  depois o usuário pediu para guardar o login: `POST /api/entrar` grava `data/conta.json` com `logado: true` e o app
+  abre direto no painel até o botão **Sair** da barra lateral (`POST /api/sair`, commit `a420462`). A tela de entrada
+  mostra o último acesso.
+- 2026-10-31 · sessão de 5h na tela · o card próprio da sessão (renovação, barras e gráfico a cada 15 min, `d71db02`)
+  saiu; virou um rodapé "Renova em…" com horário, barra e % do tempo já passado em **todos os 4 cards** (5h: horário
+  oficial ou estimado; dia: meia-noite; semana: segunda; mês: dia 1º), e o card "Plano Claude" voltou para o lado do
+  gráfico (`web/src/Sessao.tsx`, commit `fa859a7`). Desenhado antes no FigCraft (tela 01 e
+  `docs/design/previa-dashboard-escuro.png`) e aprovado.
+- 2026-10-31 · regra do usuário: FigCraft primeiro · o desenho no FigCraft é a referência visual; qualquer mudança
+  visual é feita primeiro no desenho, aprovada, e só depois no código. Ver [RULES](RULES.md#código).
 
 ## Técnico (desenho técnico)
 
@@ -46,7 +57,7 @@ Formato de cada entrada: `aaaa-mm-dd · o que aconteceu · decisão/regra`
 - 2026-10-31 · MCP · independente do app: lê os logs pelo `core/` e só varre quando uma ferramenta é chamada.
 - 2026-10-31 · lição: duplicatas do streaming · 140 linhas `assistant` = 65 mensagens únicas; sem dedupe o custo
   dobraria.
-- 2026-10-31 · conta e câmbio (planejados) · `core/conta.ts` roda `claude auth status` (nunca lê o token nem o
+- 2026-10-31 · conta e câmbio (planejados na Etapa 1, feitos na Etapa 2) · `core/conta.ts` roda `claude auth status` (nunca lê o token nem o
   `.credentials.json`); `core/cambio.ts` busca a PTAX e guarda a última cotação em `data/`.
 - 2026-10-31 · Etapa 2 (`core/`) · orçamento **guardado em US$ ou em tokens** (`config.unidade`); a moeda (R$ | US$)
   é **só exibição**. Assim a cotação do dia não muda o orçamento salvo nem o histórico. Refina a decisão "orçamentos na
@@ -84,6 +95,41 @@ Formato de cada entrada: `aaaa-mm-dd · o que aconteceu · decisão/regra`
   conta `pro`, `Host` estranho recebe 403.
 - 2026-10-31 · lição: FigCraft · os componentes de ícone ficam na mesma página das telas (não há página de
   componentes separada); o `--red-soft` escuro ainda é `#F87171` a 15%, por isso essa cor aparece nos SVGs escuros.
+  (No código, `web/src/styles.css:17` usa `#FF5A5A` a 15%.)
+- 2026-10-31 · Etapa 4 (front) · Vite em middleware no mesmo `node:http` com `--dev` (`server/main.ts:239-247`);
+  sem `--dev`, o servidor serve `dist/` com fallback para `index.html` (`servirDist()`); `--open` abre o navegador.
+  Fontes do `@fontsource` empacotadas (nada de Google Fonts: a PTAX continua sendo a única chamada de rede). Rota nova
+  `GET /api/precos` para o card de preços. A conversão R$/US$ é feita no front (`web/src/format.ts`).
+- 2026-10-31 · `/api/status` e `/api/plano` não existem · hook e statusline leem `data/status.json` (sem banco, sem
+  rede, sem depender da porta), e o plano vai dentro do `/api/resumo`. Divergência do desenho original (spec,
+  "Pontos-chave › API").
+- 2026-10-31 · sessão de 5h (`core/sessao.ts`) · estimada pelos logs na regra do limite do plano: abre na **hora
+  cheia** da primeira mensagem, dura 5 h, a próxima abre na primeira mensagem depois disso. O horário oficial
+  (`rate_limits.five_hour.resets_at`, gravado pela statusline) tem prioridade quando ainda está no futuro. O período
+  `janela5h` do orçamento continua **móvel** (últimas 5 h): são duas coisas diferentes.
+- 2026-10-31 · alertas (`core/alerts.ts`) · id `periodo:chave:nivel` com nível 80 ou 100 (não o limiar configurado);
+  na `janela5h` a chave é o dia, então no máximo um aviso de 5h por nível por dia. Cada canal tem seu registro do que
+  já mostrou (`data/avisados-windows.json`, `data/hook-avisados.json`, `localStorage` no banner), podado após 40 dias.
+- 2026-10-31 · lição: gravação atômica no Windows · `gravarJson()` grava em temporário e faz `rename`; com o arquivo
+  aberto por outro processo o `rename` dá `EPERM`, então o temporário é apagado e a gravação fica para a próxima
+  leitura (`core/alerts.ts:43-52`), em vez de derrubar o servidor.
+- 2026-10-31 · toast do Windows · `powershell.exe` 5.1 (o `pwsh` 7 não tem a projeção WinRT), com título e texto por
+  variável de ambiente para não haver injeção (`server/notify-windows.ts`).
+- 2026-10-31 · hook e statusline · `.mjs` que só leem `data/`; status com mais de 10 min é ignorado (app desligado =
+  silêncio). A statusline grava `data/plano.json` só quando a % muda ou a cada 60 s, e importa `core/plan.ts`
+  direto (Node roda TypeScript). O teste do hook mede < 2 s com a partida do Node incluída
+  (`tests/integracoes.test.ts:83`).
+- 2026-10-31 · `integrar`/`desintegrar` · backup `settings.json.bak-mtm-<ms>`, confirmação (`--sim` pula), só mexem
+  em entradas cujo comando aponta para `integrations/` deste projeto; MCP por `claude mcp add/remove --scope user`.
+  Testado pelo usuário com sucesso. Lição: rodar de novo com o MCP já registrado mostrava "falhou"; agora mostra "já
+  registrado" (commit `942783e`).
+- 2026-10-31 · MCP (Etapa 5) · `mcp/main.ts` com o SDK oficial; `ingerir()` só na chamada da ferramenta, porque
+  cada sessão do Claude Code sobe um processo próprio. O teste faz o handshake real por stdio
+  (`tests/integracoes.test.ts:107`). `zod` é importado direto, mas vem como dependência do SDK (não está no
+  `package.json`).
+- 2026-10-31 · `rate_limits` · `resets_at` pode vir em segundos, milissegundos ou ISO; `paraMs()` aceita os três
+  (`core/plan.ts:15-24`).
+- 2026-10-31 · Etapa 8 · README final; 23 testes (11 core, 6 API, 6 integrações).
 
 ## Repositório
 
@@ -93,3 +139,8 @@ Formato de cada entrada: `aaaa-mm-dd · o que aconteceu · decisão/regra`
 - 2026-10-31 · `.claude/` · cópia das skills e agentes globais do fluxo dentro do projeto (fora do Prettier); entra no
   escopo de commit `config`.
 - 2026-10-31 · licença · MIT; o README cita a ISC do Lucide.
+
+## Ambiente
+
+- 2026-10-31 · lição: `npm` no PowerShell · com a ExecutionPolicy padrão o PowerShell bloqueia o `npm.ps1`; use
+  `npm.cmd run dev` (ou `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`). Está no README.

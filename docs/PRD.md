@@ -39,9 +39,13 @@ Lista completa em [spec §5](specs/2026-10-31-my-tokken-meter.md#5-requisitos). 
   e convida a configurar.
 - **% do plano:** opcional, com liga/desliga; se falhar ou estiver desligada, o card mostra "indisponível".
 - **Alertas:** banner, notificação do Windows e do navegador, hook do Claude Code e statusline; um aviso por período
-  por limiar; hook e statusline nunca atrasam o Claude.
+  por limiar; hook e statusline nunca atrasam o Claude. (A notificação do navegador ainda não foi feita: ver
+  [TASKS](TASKS.md).)
 - **Conta:** tela de entrada com a conta do Claude Code lida de `claude auth status` (conectada ou sem conta, com
-  `claude auth login`), sem ler o token; card "Conta do Claude" nas configurações.
+  `claude auth login`), sem ler o token; card "Conta do Claude" nas configurações. Depois de entrar, o app abre
+  direto no painel até a pessoa clicar em **Sair** (implementado na Etapa 4).
+- **Renovação (acrescentado na Etapa 4):** cada card de período mostra quando ele renova e quanto do tempo já passou;
+  a sessão de 5h usa o horário oficial da statusline ou uma estimativa pelos logs.
 - **Moeda:** R$ ou US$ (seletor no cabeçalho e moeda padrão nas configurações); cotação automática pela PTAX do Banco
   Central, 1x por dia, com a última salva quando offline. É a única chamada de rede do app.
 - **MCP:** ferramentas somente leitura (`consumo_atual`, `consumo_periodo`, `status_orcamento`).

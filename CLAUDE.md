@@ -11,8 +11,8 @@ orçamento, API REST para o navegador e servidor MCP para o Claude consultar. Ro
 
 ## Estrutura
 
-Estrutura planejada na spec. Hoje (Etapa 3) existem `core/`, `server/`, `tests/`, `scripts/`, `docs/` (specs, docs principais e `design/` com as telas
-aprovadas), `.claude/` e as configs da raiz; as demais pastas nascem nas próximas etapas.
+Etapas 0–8 concluídas: existem todas as pastas da tabela abaixo, mais as configs da raiz. Mapa detalhado dos
+arquivos em [ARCHITECTURE](docs/ARCHITECTURE.md#componentes).
 
 | Pasta           | O que tem                                                                                                                       |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -43,7 +43,8 @@ aprovadas), `.claude/` e as configs da raiz; as demais pastas nascem nas próxim
 
 ### Como testar localmente
 
-`npm install` (uma vez) → `npm run dev` → abre `http://127.0.0.1:5178`
+`npm install` (uma vez) → `npm run dev` → abre `http://127.0.0.1:5178`. No PowerShell do usuário o `npm` é
+bloqueado pela ExecutionPolicy: use `npm.cmd`.
 
 ### Validações
 

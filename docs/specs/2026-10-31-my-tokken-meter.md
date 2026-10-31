@@ -4,8 +4,8 @@
 
 - **Fase:** concluída (Etapas 0–8)
 - **Branch:** `feat/sessao-mcp-alertas` → `dev` → `main`
-- **Agora:** app completo: sessão de 5h com gráfico, login a cada execução, MCP, alertas (Windows, hook, statusline), % do plano; 23 testes
-- **Próximo:** ajustes visuais pedidos pelo usuário; documentador atualizar ARCHITECTURE/MEMORY/TASKS das Etapas 4–8
+- **Agora:** app completo e publicado: rodapé "Renova em…" nos cards, login guardado com Sair, MCP, alertas (Windows, hook, statusline), % do plano; 23 testes; docs atualizados
+- **Próximo:** pendências em docs/TASKS.md (diagramas Mermaid, telas 02/03 no FigCraft, Notification do navegador)
 - **Etapas:**
   - [x] 0. Preparar o projeto: `.gitignore` (crítico), configs, `CLAUDE.md`, `check-segredos`, repo público, `dev`
   - [x] 1. Telas: tokens + 10 telas × 2 temas no FigCraft, SVGs e ícones → aprovadas
@@ -252,6 +252,11 @@ plan, conta, cambio) · `server/` (main, notify-windows) · `mcp/main.ts` · `in
 desintegrar) · `scripts/check-segredos.mjs` · `web/` (React: Entrar, Dashboard, Historico, Configuracoes, PrimeiroUso +
 componentes) · `tests/` (`node:test` + fixtures fictícias) · `docs/design/` · `data/` (ignorada pelo git).
 
+_(Como ficou: não há `status-file`, a gravação de `data/status.json` está em `server/main.ts` com `gravarJson()` de
+`core/alerts.ts`; entrou `core/sessao.ts`; `integrations/` tem também `comum.ts`; `PrimeiroUso` é uma função dentro de
+`web/src/Dashboard.tsx`, e os componentes ficam em `Sessao.tsx`, `ui.tsx`, `format.ts` e `api.ts`. Mapa completo em
+[ARCHITECTURE](../ARCHITECTURE.md#componentes).)_
+
 ### Pontos-chave
 
 - **Custo:** calculado na consulta, a partir dos tokens. Editar a tabela de preços recalcula todo o histórico. O
@@ -267,6 +272,9 @@ componentes) · `tests/` (`node:test` + fixtures fictícias) · `docs/design/` �
   - A API recusa `Host` desconhecido, para evitar DNS rebinding.
   - _(Etapa 3: entraram `GET /api/conta` (cache 60 s) e `GET /api/cambio`; `/api/status` fica para a Etapa 6 e
     `/api/plano` para a Etapa 7. Rotas em [ARCHITECTURE](../ARCHITECTURE.md#api-rest-servermaints-etapa-3).)_
+  - _(Etapas 4–7: entraram `GET /api/precos`, `POST /api/entrar` e `POST /api/sair`; `/api/status` e `/api/plano`
+    não foram criadas: o status é o arquivo `data/status.json` e o plano vai no `/api/resumo`, junto com a
+    `sessao`.)_
 - **MCP:**
   - Independente do app (lê os logs pelo `core/`) e só varre quando uma ferramenta é chamada.
   - Ferramentas: `consumo_atual`, `consumo_periodo` e `status_orcamento`.
@@ -283,6 +291,17 @@ componentes) · `tests/` (`node:test` + fixtures fictícias) · `docs/design/` �
     parciais, e o histórico sobrevive a arquivos apagados.
   - **Períodos e preços:** viradas de semana e de mês, horário de verão, busca por prefixo e modelo sem preço.
   - **Alertas e hook:** os alertas não se repetem; o hook roda em menos de 300 ms.
+- **Etapas 4–8 (o que divergiu ou foi detalhado):**
+  - Alertas: o id ficou `periodo:chave:nivel`, com nível 80 ou 100 (não o limiar configurado); na janela de 5h a
+    chave é o dia. Canais com registro próprio: toast (`data/avisados-windows.json`), hook
+    (`data/hook-avisados.json`) e banner (`localStorage`). A notificação do navegador (`Notification`) não foi feita.
+  - Sessão de 5h (`core/sessao.ts`, não estava no desenho): abre na hora cheia da primeira mensagem e dura 5 h; o
+    horário oficial da statusline (`resets_at`) tem prioridade. Na tela virou o rodapé "Renova em…" nos 4 cards
+    (desenhado antes no FigCraft), e o login passou a ficar guardado em `data/conta.json` até o botão Sair.
+  - Hook e statusline também ignoram `status.json` com mais de 10 min. O teste do hook mede < 2 s com a partida do
+    Node incluída, não < 300 ms.
+  - Front: Vite em middleware só com `--dev`; sem ele o servidor serve `dist/`. Fontes do `@fontsource` locais.
+  - Detalhes em [ARCHITECTURE](../ARCHITECTURE.md) e decisões em [MEMORY](../MEMORY.md#técnico-desenho-técnico).
 - **Etapa 2 (o que divergiu ou foi detalhado):**
   - Banco só com as tabelas `messages` e `files` (`path`, `offset`, `ignoradas`); `files` não guarda `size` nem
     `mtime` (arquivo menor que o offset é relido do zero). Não há tabela `meta` nem `alerts_sent`: alertas são da
