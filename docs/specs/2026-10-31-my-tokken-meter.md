@@ -2,15 +2,15 @@
 
 ## Andamento
 
-- **Fase:** implementação (Etapa 2 concluída)
-- **Branch:** `feat/leitor-logs-consumo` → merge na `dev`
-- **Agora:** Etapa 2 concluída: `core/` com 11 testes; conferido com os logs reais
-- **Próximo:** Etapa 3, API REST (`server/main.ts`)
+- **Fase:** implementação (Etapa 3 concluída)
+- **Branch:** `feat/api-rest-local` → merge na `dev`
+- **Agora:** Etapa 3 concluída: API REST com 7 rotas, Host e Origin checados; 17 testes
+- **Próximo:** Etapa 4, front (Vite em middleware, `npm run dev` abre o navegador)
 - **Etapas:**
   - [x] 0. Preparar o projeto: `.gitignore` (crítico), configs, `CLAUDE.md`, `check-segredos`, repo público, `dev`
   - [x] 1. Telas: tokens + 10 telas × 2 temas no FigCraft, SVGs e ícones → aprovadas
   - [x] 2. `core/`: parser, ingest incremental, SQLite, períodos, preços, conta e câmbio (com testes `node:test`)
-  - [ ] 3. API REST em `node:http` (127.0.0.1:5178, checagem de Host)
+  - [x] 3. API REST em `node:http` (127.0.0.1:5178, checagem de Host)
   - [ ] 4. Front: Vite em middleware, `npm run dev` abre o navegador; dashboard, histórico, configurações, tema
   - [ ] 5. Servidor MCP (stdio, SDK oficial, independente do app)
   - [ ] 6. Alertas: motor, toast do Windows, banner, `Notification`, hook, statusline, `integrar`/`desintegrar`
@@ -265,6 +265,8 @@ componentes) · `tests/` (`node:test` + fixtures fictícias) · `docs/design/` �
 - **API:**
   - Rotas `GET /api/resumo`, `/historico`, `/config` (+`PUT`), `/plano`, `/status` e `/health`.
   - A API recusa `Host` desconhecido, para evitar DNS rebinding.
+  - _(Etapa 3: entraram `GET /api/conta` (cache 60 s) e `GET /api/cambio`; `/api/status` fica para a Etapa 6 e
+    `/api/plano` para a Etapa 7. Rotas em [ARCHITECTURE](../ARCHITECTURE.md#api-rest-servermaints-etapa-3).)_
 - **MCP:**
   - Independente do app (lê os logs pelo `core/`) e só varre quando uma ferramenta é chamada.
   - Ferramentas: `consumo_atual`, `consumo_periodo` e `status_orcamento`.
@@ -289,8 +291,8 @@ componentes) · `tests/` (`node:test` + fixtures fictícias) · `docs/design/` �
   - Orçamentos guardados em US$ ou em tokens (`config.unidade`); a moeda é só exibição. Ver
     [MEMORY](../MEMORY.md#técnico-desenho-técnico).
   - Preços: escrita de cache derivada (5 min = 1,25x, 1 h = 2x a entrada); Opus em fast mode = 2x.
-  - Testes de períodos com `TZ = America/Sao_Paulo`: cobrem virada de semana e de mês; horário de verão não tem teste
-    próprio. Detalhes do `core/` em [ARCHITECTURE](../ARCHITECTURE.md#núcleo-core-etapa-2).
+  - Testes de períodos com `TZ = America/Sao_Paulo`: cobrem virada de semana e de mês; o horário de verão tem teste
+    próprio com `TZ = Europe/Lisbon` (`tests/core.test.ts:105`). Detalhes do `core/` em [ARCHITECTURE](../ARCHITECTURE.md#núcleo-core-etapa-2).
 - **Etapa 1:**
   - Planejado: 8 telas × 2 temas = 16 SVGs. **Entregue e aprovado:** 10 telas × 2 temas = 20 SVGs; entraram as duas
     telas de entrada (conta conectada e sem conta). Lista em [docs/design/README.md](../design/README.md).

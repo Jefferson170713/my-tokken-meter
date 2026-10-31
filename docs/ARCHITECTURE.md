@@ -3,11 +3,11 @@
 Relacionados: [Spec](specs/2026-10-31-my-tokken-meter.md#desenho-técnico) · [PRD](PRD.md) · [RULES](RULES.md) ·
 [DESIGN](DESIGN.md) · [TASKS](TASKS.md)
 
-> **Estado atual (Etapa 2):** existem as configs da raiz (`package.json`, `tsconfig.json`, `eslint.config.js`,
+> **Estado atual (Etapa 3):** existem as configs da raiz (`package.json`, `tsconfig.json`, `eslint.config.js`,
 > Prettier, EditorConfig, `.gitignore`), o `scripts/check-segredos.mjs`, a cópia de skills e agentes em `.claude/`, os
-> docs, as telas aprovadas em `docs/design/`, o núcleo `core/` e os testes em `tests/`. `server/`, `mcp/`,
-> `integrations/` e `web/` continuam **PLANEJADOS** e nascem nas próximas etapas ([TASKS](TASKS.md)). Os diagramas
-> virão na Etapa 8.
+> docs, as telas aprovadas em `docs/design/`, o núcleo `core/`, a API REST em `server/main.ts` e os testes em
+> `tests/`. O Vite em middleware, `mcp/`, `integrations/` e `web/` continuam **PLANEJADOS** e nascem nas próximas
+> etapas ([TASKS](TASKS.md)). Os diagramas virão na Etapa 8.
 
 ## Visão geral
 
@@ -19,18 +19,18 @@ sem proxy nem CORS. Persistência em `node:sqlite` (`data/meter.db`, fora do git
 
 ## Componentes
 
-| Componente      | Estado                      | Papel                                                                                                                                                                                        |
-| --------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core/`         | **existe** (Etapa 2)        | paths, db, parser, ingest, prices (+ `prices.default.json`), periods, summary, config, conta, cambio (ver [Núcleo](#núcleo-core-etapa-2)); alerts, status-file e plan virão nas Etapas 6 e 7 |
-| `server/`       | planejado (Etapas 3, 4 e 6) | `main` (API REST + Vite middleware) e `notify-windows` (toast via `powershell.exe` 5.1/WinRT)                                                                                                |
-| `mcp/main.ts`   | planejado (Etapa 5)         | servidor MCP stdio (`@modelcontextprotocol/sdk`), **independente do app**; lê os logs pelo `core/`                                                                                           |
-| `integrations/` | planejado (Etapas 6 e 7)    | `hook.mjs`, `statusline.mjs`, `integrar`, `desintegrar`                                                                                                                                      |
-| `web/`          | planejado (Etapa 4)         | React: Entrar, Dashboard, Historico, Configuracoes, PrimeiroUso + componentes                                                                                                                |
-| `tests/`        | **existe** (Etapa 2)        | `core.test.ts` (10 testes `node:test`) + fixtures **fictícias** em `tests/fixtures/projects/` (uma sessão + um subagente)                                                                    |
-| `docs/design/`  | **existe** (Etapa 1)        | fonte FigCraft, 20 SVGs das telas aprovadas e ícones Lucide; lista em [design/README.md](design/README.md)                                                                                   |
-| `scripts/`      | **existe**                  | `check-segredos.mjs`: varre os arquivos versionados atrás de tokens, caminhos de usuário, ids reais, `.jsonl` fora de `tests/fixtures/` e e-mail pessoal                                     |
-| `.claude/`      | **existe**                  | cópia das skills e agentes globais do fluxo (não é o `~/.claude`)                                                                                                                            |
-| `data/`         | fora do git                 | criada pelo `core/`: `meter.db`, `config.json` e `cambio.json` (última PTAX); `status.json` virá na Etapa 6                                                                                  |
+| Componente      | Estado                    | Papel                                                                                                                                                                                        |
+| --------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/`         | **existe** (Etapa 2)      | paths, db, parser, ingest, prices (+ `prices.default.json`), periods, summary, config, conta, cambio (ver [Núcleo](#núcleo-core-etapa-2)); alerts, status-file e plan virão nas Etapas 6 e 7 |
+| `server/`       | **existe** (Etapa 3)      | `main.ts`: API REST (ver [API REST](#api-rest-servermaints-etapa-3)); Vite middleware (Etapa 4) e `notify-windows` (toast via `powershell.exe` 5.1/WinRT, Etapa 6) planejados                |
+| `mcp/main.ts`   | planejado (Etapa 5)       | servidor MCP stdio (`@modelcontextprotocol/sdk`), **independente do app**; lê os logs pelo `core/`                                                                                           |
+| `integrations/` | planejado (Etapas 6 e 7)  | `hook.mjs`, `statusline.mjs`, `integrar`, `desintegrar`                                                                                                                                      |
+| `web/`          | planejado (Etapa 4)       | React: Entrar, Dashboard, Historico, Configuracoes, PrimeiroUso + componentes                                                                                                                |
+| `tests/`        | **existe** (Etapas 2 e 3) | `core.test.ts` (11 testes `node:test`), `api.test.ts` (6) + fixtures **fictícias** em `tests/fixtures/projects/` (uma sessão + um subagente)                                                 |
+| `docs/design/`  | **existe** (Etapa 1)      | fonte FigCraft, 20 SVGs das telas aprovadas e ícones Lucide; lista em [design/README.md](design/README.md)                                                                                   |
+| `scripts/`      | **existe**                | `check-segredos.mjs`: varre os arquivos versionados atrás de tokens, caminhos de usuário, ids reais, `.jsonl` fora de `tests/fixtures/` e e-mail pessoal                                     |
+| `.claude/`      | **existe**                | cópia das skills e agentes globais do fluxo (não é o `~/.claude`)                                                                                                                            |
+| `data/`         | fora do git               | criada pelo `core/`: `meter.db`, `config.json` e `cambio.json` (última PTAX); `status.json` virá na Etapa 6                                                                                  |
 
 ## Núcleo `core/` (Etapa 2)
 
@@ -68,6 +68,32 @@ Compartilhado por API, MCP e testes. Datas e períodos usam o fuso local da máq
   feriado), com timeout de 5 s e cache de um dia em `data/cambio.json`; sem internet devolve a salva com
   `antiga: true`, ou `null` se nunca buscou.
 
+## API REST `server/main.ts` (Etapa 3)
+
+`criarServidor({ porta, dados, logs })` monta o servidor `node:http` sem escutar (os testes usam pasta temporária e
+as fixtures); rodando direto (`node server/main.ts`), escuta em `127.0.0.1` na porta `MTM_PORTA` (padrão 5178) e avisa
+se a porta já estiver em uso. As flags `--dev --open` do `package.json` ainda não são lidas (Vite e navegador:
+Etapa 4).
+
+- **Host:** só aceita `Host` igual a `127.0.0.1:<porta>` ou `localhost:<porta>`; outro recebe 403 (DNS rebinding
+  contra o `PUT /api/config`). Com porta 0 (testes), a porta aceita passa a ser a que o sistema escolheu.
+- **Leitura dos logs:** uma ao subir e depois a cada 30 s em segundo plano; o `GET /api/resumo` também lê na hora se a
+  última leitura tem mais de 5 s.
+- **Respostas:** JSON com `cache-control: no-store`; rota inexistente 404; erro inesperado 500 (`erro interno`, detalhe
+  só no console).
+
+| Rota                 | O que faz                                                                                                                                                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/health`    | `{ ok: true }`                                                                                                                                                                                                         |
+| `GET /api/resumo`    | `periodos` (`resumo()` dos 4 períodos), `moeda`, `unidade`, `limiar`, `cotacao`, `linhasIgnoradas`, `ultimaLeitura` (ms), `tabelaPrecos`. Pasta de logs inexistente: 503 `{ erro: 'pasta-nao-encontrada', pastaLogs }` |
+| `GET /api/historico` | `?agrupar=dia\|sessao\|projeto\|modelo` (padrão `dia`), `de` e `ate` em ms (padrão: os últimos 14 dias). Agrupamento ou período inválido: 400                                                                          |
+| `GET /api/config`    | `data/config.json` com os padrões                                                                                                                                                                                      |
+| `PUT /api/config`    | corpo JSON até 64 KB (acima: 413), validado por `salvarConfig()`; JSON quebrado ou config inválida: 400 com a mensagem                                                                                                 |
+| `GET /api/conta`     | `lerConta()` (`claude auth status`), em cache por 60 s                                                                                                                                                                 |
+| `GET /api/cambio`    | `obterCotacao()` (PTAX do dia ou a última salva)                                                                                                                                                                       |
+
+`/api/status` (Etapa 6) e `/api/plano` (Etapa 7) ainda não existem.
+
 ## Fluxos
 
 O que já existe no `core/` (Etapa 2) está marcado; o resto é **planejado**.
@@ -80,8 +106,8 @@ O que já existe no `core/` (Etapa 2) está marcado; o resto é **planejado**.
 - **Custo (existe):** calculado na consulta a partir dos tokens (`core/summary.ts`); editar a tabela de preços (padrão
   mais `config.precos`) recalcula o histórico. Modelo pelo nome exato ou pelo maior prefixo; sem preço, os tokens contam,
   o custo não, e o modelo entra em `semPreco` (`custoUsd` é sempre número, não existe `custo=null`).
-- **API REST:** `GET /api/resumo`, `/historico`, `/config` (+`PUT`), `/plano`, `/status`, `/health`. Escuta só em
-  `127.0.0.1` e recusa `Host` desconhecido (DNS rebinding).
+- **API REST (existe):** rotas e regras em [API REST](#api-rest-servermaints-etapa-3). Escuta só em `127.0.0.1` e
+  recusa `Host` desconhecido (DNS rebinding). `/plano` e `/status` virão nas Etapas 7 e 6.
 - **MCP:** só varre quando uma ferramenta é chamada (`consumo_atual`, `consumo_periodo`, `status_orcamento`). Nada de
   `console.log`: o stdout é o canal do protocolo.
 - **Alertas:** id `periodo:chave:limiar`; cada canal registra o que já mostrou. O servidor grava `data/status.json`;
@@ -95,14 +121,15 @@ O que já existe no `core/` (Etapa 2) está marcado; o resto é **planejado**.
 - **Câmbio (existe no `core/`):** `core/cambio.ts` busca a PTAX do Banco Central uma vez por dia e guarda a última
   cotação em `data/cambio.json`; offline, usa a salva. É a **única chamada de rede** do app. Os orçamentos ficam
   **guardados em US$ ou em tokens** (`config.unidade`, `core/config.ts:10`); a moeda escolhida (R$ | US$) é só
-  exibição; a conversão pela cotação fica para a API e o front (Etapas 3 e 4).
+  exibição; a API entrega a cotação junto (`cotacao` no `/api/resumo` e `/api/cambio`) e a conversão fica para o front
+  (Etapa 4).
 - **Integração:** `npm run integrar`/`desintegrar` fazem backup, pedem confirmação e só mexem nas entradas do app; a
   statusline só é instalada se não houver outra (inclui o badge `[PONYTAIL]`).
 
 ## Ambientes
 
 - **Dev:** `npm run dev` (`node server/main.ts --dev --open`) → `http://127.0.0.1:5178`; `npm run dev:back` com
-  `--watch`.
+  `--watch`. Hoje (Etapa 3) sobe só a API; Vite e abrir o navegador chegam na Etapa 4. Porta: `MTM_PORTA`.
 - **Local sem dev:** `npm run start` (`node server/main.ts --open`).
 - **MCP:** `npm run mcp`, registrado no Claude Code no escopo de usuário.
 - Sem deploy em nuvem. Plataforma principal: Windows 11.

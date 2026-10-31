@@ -64,12 +64,24 @@ Formato de cada entrada: `aaaa-mm-dd · o que aconteceu · decisão/regra`
   `limites()`) em vez de `date()` do SQLite, que trabalha em UTC por padrão e poria mensagens da noite no dia seguinte
   (`core/summary.ts:72-86`).
 - 2026-10-31 · lição: TZ nos testes · os testes de períodos e resumo fixam `process.env.TZ = 'America/Sao_Paulo'`
-  (`tests/core.test.ts:91,110`); sem isso o resultado muda conforme o fuso da máquina.
+  (e `Europe/Lisbon` no teste do horário de verão), em `tests/core.test.ts:96,106,124`; sem isso o resultado muda
+  conforme o fuso da máquina.
 - 2026-10-31 · conta sem PATH · o `claude` nem sempre está no PATH; `acharClaude()` usa `MTM_CLAUDE_BIN` ou o binário
   nativo da extensão do VS Code antes de cair no `claude` (`core/conta.ts:28-51`). Sem login o comando pode sair com
   código diferente de 0 e ainda imprimir o JSON.
 - 2026-10-31 · conferência com logs reais (Etapa 2) · 1ª leitura 169 ms (298 mensagens), 2ª leitura 16 ms
   (incremental); custo do dia coerente com o painel do ponytail.
+- 2026-10-31 · Etapa 3 (API) · `node:http` puro com um mapa `"MÉTODO /caminho"` → função (`server/main.ts:36-79`),
+  sem framework. Rotas `/api/conta` e `/api/cambio` entraram (não estavam no desenho); `/api/plano` e `/api/status`
+  ficam para as Etapas 7 e 6.
+- 2026-10-31 · leitura dos logs na API · uma ao subir + a cada 30 s em segundo plano (`setInterval(...).unref()`), e o
+  `/api/resumo` relê na hora se a última leitura tem mais de 5 s (`server/main.ts:39,127-128`): o número fica fresco sem
+  varrer a cada requisição. `/api/conta` fica em cache 60 s porque `claude auth status` é lento.
+- 2026-10-31 · lição: porta 0 nos testes · a checagem de `Host` compara com a porta configurada; com `listen(0)` o
+  sistema escolhe outra e tudo daria 403. O evento `listening` troca a porta aceita pela real (`server/main.ts:116-120`)
+  e os testes pegam a URL por `app.porta()`.
+- 2026-10-31 · teste com o app de verdade (Etapa 3) · custo do dia US$ 32,21 em 351 mensagens, PTAX real R$ 5,4212,
+  conta `pro`, `Host` estranho recebe 403.
 - 2026-10-31 · lição: FigCraft · os componentes de ícone ficam na mesma página das telas (não há página de
   componentes separada); o `--red-soft` escuro ainda é `#F87171` a 15%, por isso essa cor aparece nos SVGs escuros.
 
