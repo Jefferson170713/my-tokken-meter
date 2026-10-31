@@ -1,17 +1,46 @@
+import { spawn } from 'node:child_process'
+import fs from 'node:fs'
 import http from 'node:http'
+import path from 'node:path'
 import { obterCotacao } from '../core/cambio.ts'
 import { lerConfig, salvarConfig } from '../core/config.ts'
 import { lerConta, type Conta } from '../core/conta.ts'
 import { abrirDb } from '../core/db.ts'
 import { ingerir, totalIgnoradas } from '../core/ingest.ts'
 import { pastaDados, pastaLogs } from '../core/paths.ts'
-import { tabelaInfo } from '../core/prices.ts'
+import { tabelaInfo, tabelaPadrao } from '../core/prices.ts'
 import { historico, resumo, type Agrupar } from '../core/summary.ts'
 
 export const PORTA = Number(process.env.MTM_PORTA ?? 5178)
 const LIMITE_CORPO = 64 * 1024
+const RAIZ = path.join(import.meta.dirname, '..')
+const TIPOS: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.svg': 'image/svg+xml',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.png': 'image/png',
+}
 
-type Opcoes = { porta?: number; dados?: string; logs?: string }
+type Middleware = (req: http.IncomingMessage, res: http.ServerResponse, proximo: () => void) => void
+type Opcoes = { porta?: number; dados?: string; logs?: string; front?: Middleware }
+
+// Front já compilado (npm start): arquivos de dist/, e index.html para qualquer outra rota.
+export function servirDist(pasta = path.join(RAIZ, 'dist')): Middleware {
+  return (req, res, proximo) => {
+    if (req.method !== 'GET') return proximo()
+    const caminho = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname)
+    let arquivo = path.join(pasta, caminho)
+    if (!arquivo.startsWith(pasta)) return proximo() // ../ fora de dist
+    if (!fs.existsSync(arquivo) || fs.statSync(arquivo).isDirectory())
+      arquivo = path.join(pasta, 'index.html')
+    if (!fs.existsSync(arquivo)) return proximo()
+    res.writeHead(200, { 'content-type': TIPOS[path.extname(arquivo)] ?? 'application/octet-stream' })
+    fs.createReadStream(arquivo).pipe(res)
+  }
+}
 type Rota = (url: URL, corpo: unknown) => Promise<[number, unknown]> | [number, unknown]
 
 export function criarServidor(opcoes: Opcoes = {}) {
@@ -22,6 +51,7 @@ export function criarServidor(opcoes: Opcoes = {}) {
   let ultimaLeitura = 0
   let erroLeitura: string | null = null
   let conta: { valor: Conta; em: number } | null = null
+  let front = opcoes.front
 
   function ler() {
     try {
@@ -81,6 +111,7 @@ export function criarServidor(opcoes: Opcoes = {}) {
       return [200, conta.valor]
     },
     'GET /api/cambio': async () => [200, await obterCotacao(dados)],
+    'GET /api/precos': () => [200, { padrao: tabelaPadrao, ...tabelaInfo }],
   }
 
   const servidor = http.createServer(async (req, res) => {
@@ -100,7 +131,11 @@ export function criarServidor(opcoes: Opcoes = {}) {
       return responder(403, { erro: 'origem não permitida' })
     const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
     const rota = rotas[`${req.method} ${url.pathname}`]
-    if (!rota) return responder(404, { erro: 'não encontrado' })
+    if (!rota) {
+      if (front && !url.pathname.startsWith('/api/'))
+        return front(req, res, () => responder(404, { erro: 'não encontrado' }))
+      return responder(404, { erro: 'não encontrado' })
+    }
     try {
       let corpo: unknown
       if (req.method === 'PUT') {
@@ -135,7 +170,15 @@ export function criarServidor(opcoes: Opcoes = {}) {
     if (endereco && typeof endereco === 'object') porta = endereco.port
   })
 
-  return { servidor, ler, db, porta: () => porta }
+  return { servidor, ler, db, porta: () => porta, usarFront: (m: Middleware) => (front = m) }
+}
+
+function abrirNavegador(url: string) {
+  const [cmd, args] =
+    process.platform === 'win32'
+      ? ['cmd', ['/c', 'start', '', url]]
+      : [process.platform === 'darwin' ? 'open' : 'xdg-open', [url]]
+  spawn(cmd, args as string[], { detached: true, stdio: 'ignore' }).unref()
 }
 
 if (import.meta.main) {
@@ -143,14 +186,32 @@ if (import.meta.main) {
     console.error(`MTM_PORTA inválida: "${process.env.MTM_PORTA}". Use um número de 1 a 65535.`)
     process.exit(1)
   }
-  const { servidor, ler } = criarServidor()
+  const { servidor, ler, usarFront } = criarServidor()
   ler()
   setInterval(ler, 30_000).unref()
+  if (process.argv.includes('--dev')) {
+    // Vite no mesmo processo e porta: front com recarga automática, sem proxy nem CORS
+    const { createServer } = await import('vite')
+    const vite = await createServer({
+      configFile: path.join(RAIZ, 'vite.config.ts'),
+      server: { middlewareMode: true, hmr: { server: servidor } },
+      appType: 'spa',
+    })
+    usarFront(vite.middlewares)
+  } else {
+    if (!fs.existsSync(path.join(RAIZ, 'dist', 'index.html')))
+      console.warn('Front não compilado: rode npm run build (ou use npm run dev).')
+    usarFront(servirDist())
+  }
   servidor.on('error', (e: NodeJS.ErrnoException) => {
     console.error(
       e.code === 'EADDRINUSE' ? `A porta ${PORTA} já está em uso. Feche o outro app ou defina MTM_PORTA.` : e,
     )
     process.exit(1)
   })
-  servidor.listen(PORTA, '127.0.0.1', () => console.log(`my-tokken-meter em http://127.0.0.1:${PORTA}`))
+  servidor.listen(PORTA, '127.0.0.1', () => {
+    const url = `http://127.0.0.1:${PORTA}`
+    console.log(`my-tokken-meter em ${url}`)
+    if (process.argv.includes('--open')) abrirNavegador(url)
+  })
 }

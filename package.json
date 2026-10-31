@@ -23,6 +23,8 @@
     "check:segredos": "node scripts/check-segredos.mjs"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "lucide-react": "^1.66.0",
     "react": "^19.3.1",
