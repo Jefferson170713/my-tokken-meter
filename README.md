@@ -1,13 +1,15 @@
 # my-tokken-meter
 
 Medidor **local** do seu consumo do [Claude Code](https://claude.com/claude-code): janela de 5 horas, dia, semana e
-mês, em US$ estimado e tokens, com alertas quando você chega a 80% e 100% do orçamento que definiu.
+mês, em R$ ou US$ estimado e tokens, com alertas quando você chega a 80% e 100% do orçamento que definiu.
 
 > 🚧 Em construção. O plano completo está em [`docs/specs/2026-10-31-my-tokken-meter.md`](docs/specs/2026-10-31-my-tokken-meter.md).
 
 ## O que vai ter
 
-- Dashboard no navegador, tema claro e escuro.
+- Dashboard no navegador, tema claro e escuro. Telas aprovadas em [`docs/design/`](docs/design/README.md).
+- Mostra a conta em que o Claude Code está logado (`claude auth status`), sem ler o seu token.
+- Valores em R$ ou US$, com a cotação PTAX do Banco Central (a única chamada de rede do app).
 - Leitura dos logs locais do Claude Code (`~/.claude/projects`), sem enviar nada para fora.
 - % real do plano (5h e semana) lida da statusline do Claude Code, sem usar o seu token.
 - Alertas: banner, notificação do Windows, aviso dentro do Claude Code e statusline.

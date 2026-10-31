@@ -18,6 +18,9 @@ Regras que não podem quebrar. Fonte: `CLAUDE.md` e spec §6. Em caso de conflit
   da statusline, sem token).
 - Linhas `api-request*` dos logs trazem o prompt inteiro e **nunca** podem ser copiadas.
 - A API escuta só em `127.0.0.1`.
+- A única chamada de rede do app é a cotação PTAX do Banco Central (API pública), uma vez por dia; nenhum dado do
+  usuário sai do PC.
+- A conta do Claude vem de `claude auth status`, **sem ler o token**.
 - Não sobrescrever a configuração do ponytail nem do ECC (hooks, statusline).
 
 ## Git

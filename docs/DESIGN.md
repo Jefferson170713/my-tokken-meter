@@ -1,48 +1,74 @@
 # Design: my-tokken-meter
 
 Relacionados: [Spec](specs/2026-10-31-my-tokken-meter.md#tokens-de-cor-aa) · [PRD](PRD.md) · [TASKS](TASKS.md) ·
-[MEMORY](MEMORY.md)
+[MEMORY](MEMORY.md) · [Telas](design/README.md)
 
-> Telas ainda **não desenhadas** (Etapa 1). Nenhum código de interface antes da aprovação do usuário.
+> Telas **aprovadas** pelo usuário em 2026-10-31 (Etapa 1). O código de interface segue esses SVGs.
 
 ## Princípios
 
-- Paleta **verde + laranja + branco**. No escuro, o mesmo verde e laranja, com fundo escuro no lugar do branco.
+- Paleta **verde + laranja + branco**. No escuro, o mesmo verde e laranja, com fundo **neutro (preto)** no lugar do
+  branco.
 - **Tema escuro por padrão**, com botão para alternar; a escolha fica salva.
 - Ícones **Lucide** (`lucide-react` no front; SVGs de `lucide-static` em `docs/design/icons/`).
-- Números em formato brasileiro: US$ com vírgula decimal (não R$).
-- Limite: **80% laranja, 100% vermelho** + ícone `triangle-alert`.
+- Números em formato brasileiro (vírgula decimal), em **R$ ou US$**: seletor no cabeçalho (Dashboard, Dashboard com
+  alerta, Sem orçamento, Vazio e Histórico) e moeda padrão no card "Moeda" das Configurações. Cotação automática pela
+  PTAX do Banco Central, mostrada com a data (ex.: "PTAX 30/10").
+- Limite: **80% laranja** + `triangle-alert`; **100% ou mais vermelho** + `octagon-alert`, inclusive na barra do
+  gráfico e na tabela.
+- Estado **nunca só pela cor**: sempre há % escrita, ícone ou texto.
+- Conta do Claude lida com `claude auth status` (e-mail e plano), sem ler o token.
 - Custo rotulado como "estimado (preço de API)"; os rótulos devem deixar claro que a janela móvel de 5h do orçamento
   não é a janela real da Anthropic.
+- Valores em `JetBrains Mono`; textos em `IBM Plex Sans`.
 
 ## Tokens de cor (AA)
 
-| Token                      | Claro     | Escuro    |
-| -------------------------- | --------- | --------- |
-| `--bg`                     | `#FFFFFF` | `#0F1512` |
-| `--surface`                | `#F4F7F5` | `#18211C` |
-| `--text`                   | `#0F1A14` | `#F1F5F3` |
-| `--text-muted`             | `#4B5A52` | `#A3B1AA` |
-| `--green` (preenchimento)  | `#16A34A` | `#16A34A` |
-| `--orange` (preenchimento) | `#EA580C` | `#EA580C` |
-| `--green-text`             | `#15803D` | `#22C55E` |
-| `--orange-text`            | `#C2410C` | `#FB923C` |
-| `--red` (100%)             | `#B91C1C` | `#F87171` |
+Variáveis da coleção **Tema** (modos Escuro e Claro) em `docs/design/my-tokken-meter.figcraft`.
 
-`--red` foi acrescentado por decisão do usuário (spec §11, "Cor do limite").
+| Token                      | Claro           | Escuro          |
+| -------------------------- | --------------- | --------------- |
+| `--bg`                     | `#FFFFFF`       | `#0A0A0A`       |
+| `--surface`                | `#F4F7F5`       | `#141414`       |
+| `--surface-2`              | `#E8EEEA`       | `#1F1F1F`       |
+| `--border`                 | `#D9E2DC`       | `#2A2A2A`       |
+| `--text`                   | `#0F1A14`       | `#FAFAFA`       |
+| `--text-muted`             | `#4B5A52`       | `#A1A1A1`       |
+| `--green` (preenchimento)  | `#16A34A`       | `#16A34A`       |
+| `--orange` (preenchimento) | `#EA580C`       | `#EA580C`       |
+| `--red` (100%)             | `#B91C1C`       | `#FF5A5A`       |
+| `--green-text`             | `#15803D`       | `#22C55E`       |
+| `--orange-text`            | `#C2410C`       | `#FB923C`       |
+| `--green-soft`             | `#16A34A` a 10% | `#16A34A` a 15% |
+| `--orange-soft`            | `#EA580C` a 10% | `#EA580C` a 15% |
+| `--red-soft`               | `#B91C1C` a 10% | `#F87171` a 15% |
+| `--on-accent`              | `#FFFFFF`       | `#0A0A0A`       |
+| `--accent-btn`             | `#15803D`       | `#22C55E`       |
+
+- `--red` foi acrescentado por decisão do usuário (spec §11, "Cor do limite"). No escuro era `#F87171`; na Etapa 1
+  passou a `#FF5A5A` (o `--red-soft` escuro ainda usa `#F87171` a 15%).
+- Escuro neutro decidido na Etapa 1 (spec §11, "Modo escuro"); verdes, laranjas e o modo claro não mudaram.
+- Contraste conferido no escuro: `--text-muted` 7,1:1 no `--surface`; `--red` 6,0:1 no `--surface`.
 
 ## Telas (Etapa 1)
 
-8 telas × 2 temas = 16 SVGs, mais uma página de componentes. Fonte em `docs/design/my-tokken-meter.figcraft`, SVGs em
-`docs/design/svg/`, ícones em `docs/design/icons/`.
+10 telas × 2 temas = 20 SVGs, desktop 1440 px, com dados fictícios. Lista com os links em
+[docs/design/README.md](design/README.md). Fonte em `docs/design/my-tokken-meter.figcraft` (os componentes de ícone
+ficam na mesma página), SVGs em `docs/design/svg/`, ícones em `docs/design/icons/`.
 
-| Tela                    | Status     |
-| ----------------------- | ---------- |
-| Dashboard               | a desenhar |
-| Dashboard com alerta    | a desenhar |
-| Dashboard sem orçamento | a desenhar |
-| Primeiro uso            | a desenhar |
-| Vazio                   | a desenhar |
-| Erro                    | a desenhar |
-| Histórico               | a desenhar |
-| Configurações           | a desenhar |
+| #   | Tela                     | Status   |
+| --- | ------------------------ | -------- |
+| 00  | Entrar (conta conectada) | aprovada |
+| 00  | Entrar (sem conta)       | aprovada |
+| 01  | Dashboard                | aprovada |
+| 02  | Dashboard com alerta     | aprovada |
+| 03  | Dashboard sem orçamento  | aprovada |
+| 04  | Primeiro uso             | aprovada |
+| 05  | Vazio                    | aprovada |
+| 06  | Erro                     | aprovada |
+| 07  | Histórico                | aprovada |
+| 08  | Configurações            | aprovada |
+
+- **Entrar (conta conectada):** mostra a conta de `claude auth status`. **Sem conta:** mostra o comando
+  `claude auth login`.
+- **Configurações:** incluem os cards "Conta do Claude" e "Moeda" (moeda padrão).

@@ -3,9 +3,9 @@
 Relacionados: [Spec](specs/2026-10-31-my-tokken-meter.md#desenho-técnico) · [PRD](PRD.md) · [RULES](RULES.md) ·
 [DESIGN](DESIGN.md) · [TASKS](TASKS.md)
 
-> **Estado atual (Etapa 0):** quase tudo abaixo é **PLANEJADO**. Hoje existem só as configs da raiz (`package.json`,
+> **Estado atual (Etapa 1):** quase tudo abaixo é **PLANEJADO**. Hoje existem só as configs da raiz (`package.json`,
 > `tsconfig.json`, `eslint.config.js`, Prettier, EditorConfig, `.gitignore`), o `scripts/check-segredos.mjs`, a cópia
-> de skills e agentes em `.claude/` e os docs. As demais pastas nascem nas próximas etapas ([TASKS](TASKS.md)). Os
+> de skills e agentes em `.claude/`, os docs e as telas aprovadas em `docs/design/`. As demais pastas nascem nas próximas etapas ([TASKS](TASKS.md)). Os
 > diagramas virão na Etapa 8.
 
 ## Visão geral
@@ -20,16 +20,16 @@ sem proxy nem CORS. Persistência em `node:sqlite` (`data/meter.db`, fora do git
 
 | Componente      | Estado                        | Papel                                                                                                                                                    |
 | --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core/`         | planejado (Etapa 2)           | paths, db, parser, ingest, prices (+ `prices.default.json`), periods, summary, config, alerts, status-file, plan                                         |
+| `core/`         | planejado (Etapa 2)           | paths, db, parser, ingest, prices (+ `prices.default.json`), periods, summary, config, alerts, status-file, plan, conta, cambio                          |
 | `server/`       | planejado (Etapas 3, 4 e 6)   | `main` (API REST + Vite middleware) e `notify-windows` (toast via `powershell.exe` 5.1/WinRT)                                                            |
 | `mcp/main.ts`   | planejado (Etapa 5)           | servidor MCP stdio (`@modelcontextprotocol/sdk`), **independente do app**; lê os logs pelo `core/`                                                       |
 | `integrations/` | planejado (Etapas 6 e 7)      | `hook.mjs`, `statusline.mjs`, `integrar`, `desintegrar`                                                                                                  |
-| `web/`          | planejado (Etapa 4)           | React: Dashboard, Historico, Configuracoes, PrimeiroUso + componentes                                                                                    |
+| `web/`          | planejado (Etapa 4)           | React: Entrar, Dashboard, Historico, Configuracoes, PrimeiroUso + componentes                                                                            |
 | `tests/`        | planejado (Etapa 2 em diante) | `node:test` + fixtures **fictícias**                                                                                                                     |
-| `docs/design/`  | planejado (Etapa 1)           | fonte FigCraft, SVGs das telas e ícones Lucide                                                                                                           |
+| `docs/design/`  | **existe** (Etapa 1)          | fonte FigCraft, 20 SVGs das telas aprovadas e ícones Lucide; lista em [design/README.md](design/README.md)                                               |
 | `scripts/`      | **existe**                    | `check-segredos.mjs`: varre os arquivos versionados atrás de tokens, caminhos de usuário, ids reais, `.jsonl` fora de `tests/fixtures/` e e-mail pessoal |
 | `.claude/`      | **existe**                    | cópia das skills e agentes globais do fluxo (não é o `~/.claude`)                                                                                        |
-| `data/`         | planejado, fora do git        | `meter.db`, `status.json` e configurações locais                                                                                                         |
+| `data/`         | planejado, fora do git        | `meter.db`, `status.json`, última cotação PTAX e configurações locais                                                                                    |
 
 ## Fluxos
 
@@ -49,6 +49,10 @@ Todos **planejados**:
   leem esse arquivo, ficam abaixo de 300 ms e não fazem nada com o app desligado.
 - **% do plano:** lida do `rate_limits` (`five_hour`, `seven_day`) que o Claude Code envia ao script da statusline,
   **sem ler o token OAuth**. Atualiza só com o Claude Code em uso.
+- **Conta:** `core/conta.ts` roda `claude auth status` e usa o JSON (`loggedIn`, `authMethod`, `email`,
+  `subscriptionType`, `projectsDirectory`); nunca lê o token. Sem conta, o front mostra `claude auth login`.
+- **Câmbio:** `core/cambio.ts` busca a PTAX do Banco Central uma vez por dia e guarda a última cotação em `data/`;
+  offline, usa a salva. É a **única chamada de rede** do app. Orçamentos ficam na moeda escolhida.
 - **Integração:** `npm run integrar`/`desintegrar` fazem backup, pedem confirmação e só mexem nas entradas do app; a
   statusline só é instalada se não houver outra (inclui o badge `[PONYTAIL]`).
 

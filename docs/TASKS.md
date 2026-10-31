@@ -7,14 +7,15 @@ Etapas da spec. Branch de cada uma em [spec, Branches](specs/2026-10-31-my-tokke
 
 ## Em aberto
 
-- [ ] **1. Telas** — tokens + componentes + 8 telas × 2 temas no FigCraft, SVGs e ícones. Pronto: 16 SVGs em
-      `docs/design/svg/` aprovados pelo usuário.
-- [ ] **2. `core/`** — parser, ingest incremental, SQLite, períodos, preços. Pronto: testes `node:test` de dedupe,
-      `<synthetic>`, leitura incremental, períodos/fuso e preços passando.
-- [ ] **3. API REST** — `node:http` em 127.0.0.1:5178 com checagem de Host. Pronto: rotas `/api/*` respondem e Host
-      desconhecido é recusado.
-- [ ] **4. Front** — Vite em middleware; dashboard, histórico, configurações, tema. Pronto: `npm run dev` abre o
-      dashboard e o tema alternado fica salvo.
+- [ ] **2. `core/`** — parser, ingest incremental, SQLite, períodos, preços, `conta.ts` (`claude auth status`) e
+      `cambio.ts` (PTAX do Banco Central, 1x por dia, cache em `data/`). Pronto: testes `node:test` de dedupe,
+      `<synthetic>`, leitura incremental, períodos/fuso e preços passando; conta lida sem ler o token (com e sem
+      login); câmbio usa a última cotação salva quando está sem internet.
+- [ ] **3. API REST** — `node:http` em 127.0.0.1:5178 com checagem de Host; expõe também a conta e a cotação.
+      Pronto: rotas `/api/*` respondem, Host desconhecido é recusado e a PTAX é a única chamada de rede.
+- [ ] **4. Front** — Vite em middleware; telas de [DESIGN](DESIGN.md#telas-etapa-1): entrada (conectada e sem conta),
+      dashboard, histórico, configurações (cards "Conta do Claude" e "Moeda"), tema e seletor R$ | US$. Pronto:
+      `npm run dev` abre o dashboard, o tema alternado fica salvo e os valores trocam entre R$ e US$.
 - [ ] **5. Servidor MCP** — stdio, SDK oficial, independente do app. Pronto: o Claude responde "quanto já usei hoje?"
       com os números do app.
 - [ ] **6. Alertas** — motor, toast do Windows, banner, `Notification`, hook, statusline, `integrar`/`desintegrar`.
@@ -26,5 +27,8 @@ Etapas da spec. Branch de cada uma em [spec, Branches](specs/2026-10-31-my-tokke
 
 ## Concluídas
 
+- [x] 2026-10-31 · **1. Telas** — 10 telas × 2 temas = 20 SVGs em `docs/design/svg/` (inclui as duas de entrada),
+      fonte `docs/design/my-tokken-meter.figcraft` e ícones Lucide em `docs/design/icons/`, aprovados pelo usuário.
+      Lista em [docs/design/README.md](design/README.md).
 - [x] 2026-10-31 · **0. Preparar o projeto** — `.gitignore`, configs (TypeScript, ESLint, Prettier, EditorConfig),
       `CLAUDE.md`, `scripts/check-segredos.mjs`, `LICENSE` MIT, cópia de skills/agentes em `.claude/` e `docs/`.
