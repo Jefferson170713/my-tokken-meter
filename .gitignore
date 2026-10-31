@@ -1,0 +1,28 @@
+# Dependências e builds
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Dados locais do app (consumo, configurações, status) — nunca vão para o repo
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite*
+
+# Logs do Claude Code: só fixtures fictícias entram
+*.jsonl
+!tests/fixtures/**/*.jsonl
+
+# Segredos e configurações pessoais
+.env
+.env.*
+.credentials.json
+settings.local.json
+*.bak*
+
+# Diversos
+*.log
+Thumbs.db
+.DS_Store

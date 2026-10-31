@@ -1,0 +1,9 @@
+node_modules
+dist
+data
+coverage
+package-lock.json
+docs/design/svg
+docs/design/icons
+*.jsonl
+.claude

@@ -1,0 +1,46 @@
+{
+  "name": "my-tokken-meter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Medidor local do consumo do Claude Code: janela de 5h, dia, semana e mês, com alertas, API REST e servidor MCP.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node server/main.ts --dev --open",
+    "dev:back": "node --watch server/main.ts --dev",
+    "start": "node server/main.ts --open",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "mcp": "node mcp/main.ts",
+    "integrar": "node integrations/integrar.ts",
+    "desintegrar": "node integrations/desintegrar.ts",
+    "check:segredos": "node scripts/check-segredos.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "lucide-react": "^1.66.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "lucide-static": "^1.66.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.5"
+  }
+}
